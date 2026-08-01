@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>¡En la Cabeza! — Heads Up en Español</title>
+<style>
+  :root {
+    --bg: #1a1040;
+    --card: #ffffff;
+    --accent: #ff5e7e;
+    --good: #2ecc71;
+    --pass: #f39c12;
+    --text: #2c2350;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(160deg, #1a1040 0%, #3b1f6e 60%, #5a2a8c 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    overflow: hidden;
+    user-select: none;
+  }
+  .screen { display: none; width: 100%; max-width: 640px; padding: 24px; text-align: center; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+  h1 { font-size: clamp(2rem, 7vw, 3rem); line-height: 1.1; }
+  h1 .sub { display: block; font-size: 0.45em; font-weight: 400; opacity: 0.8; margin-top: 6px; }
+
+  .howto {
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+  .cat-btn {
+    border: none;
+    border-radius: 16px;
+    padding: 18px 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--card);
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+    transition: transform 0.1s;
+  }
+  .cat-btn:active { transform: translateY(3px); box-shadow: none; }
+  .cat-btn .emoji { display: block; font-size: 2rem; margin-bottom: 6px; }
+  .cat-btn .count { display: block; font-size: 0.75rem; font-weight: 400; opacity: 0.6; margin-top: 4px; }
+  .cat-btn.all { grid-column: 1 / -1; background: var(--accent); color: #fff; }
+
+  /* Countdown */
+  #countdown-num { font-size: 7rem; font-weight: 800; }
+  #countdown-tip { font-size: 1.1rem; opacity: 0.85; }
+
+  /* Game */
+  #screen-game { height: 100dvh; justify-content: space-between; padding: 16px; max-width: 100%; }
+  .hud { display: flex; justify-content: space-between; width: 100%; max-width: 640px; font-size: 1.2rem; font-weight: 700; }
+  #timer.low { color: var(--accent); animation: pulse 0.5s infinite alternate; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+  #word-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 640px;
+    background: var(--card);
+    color: var(--text);
+    border-radius: 20px;
+    margin: 12px 0;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  #word-card.flash-good { background: var(--good); color: #fff; }
+  #word-card.flash-pass { background: var(--pass); color: #fff; }
+  #word { font-size: clamp(2.2rem, 9vw, 4.5rem); font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+  #word-en { font-size: 1.1rem; opacity: 0.55; margin-top: 10px; }
+
+  .controls { display: flex; gap: 12px; width: 100%; max-width: 640px; }
+  .ctrl-btn {
+    flex: 1;
+    border: none;
+    border-radius: 16px;
+    padding: 20px 10px;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  }
+  .ctrl-btn:active { transform: translateY(3px); box-shadow: none; }
+  #btn-pass { background: var(--pass); }
+  #btn-correct { background: var(--good); }
+  .hint { font-size: 0.8rem; opacity: 0.6; }
+
+  /* Results */
+  #final-score { font-size: 4rem; font-weight: 800; color: var(--accent); }
+  .result-lists { display: flex; gap: 14px; width: 100%; text-align: left; }
+  .result-col { flex: 1; background: rgba(255,255,255,0.1); border-radius: 14px; padding: 12px 14px; max-height: 38dvh; overflow-y: auto; }
+  .result-col h3 { font-size: 0.95rem; margin-bottom: 8px; }
+  .result-col ul { list-style: none; font-size: 0.95rem; line-height: 1.7; }
+  .result-col .en { opacity: 0.55; font-size: 0.8em; }
+
+  .big-btn {
+    border: none;
+    border-radius: 16px;
+    padding: 16px 32px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  }
+  .big-btn:active { transform: translateY(3px); box-shadow: none; }
+  .link-btn { background: none; border: none; color: #fff; opacity: 0.7; font-size: 1rem; cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- Home / category selection -->
+<section id="screen-home" class="screen active">
+  <h1>🎉 ¡En la Cabeza!<span class="sub">Heads Up! en Español</span></h1>
+  <div class="howto">
+    <strong>Cómo jugar:</strong> el jugador que adivina pone el teléfono en su frente
+    <em>sin mirar la pantalla</em>. Los demás dan pistas, actúan o hacen sonidos —
+    ¡sin decir la palabra! Tienen <strong>60 segundos</strong>.
+    Toca <strong>✓ Correcto</strong> cuando adivinen y <strong>Pasar</strong> para saltar.
+  </div>
+  <div class="cats" id="cats"></div>
+</section>
+
+<!-- Countdown -->
+<section id="screen-countdown" class="screen">
+  <div id="countdown-num">3</div>
+  <div id="countdown-tip">¡Pon el teléfono en tu frente!</div>
+</section>
+
+<!-- Game -->
+<section id="screen-game" class="screen">
+  <div class="hud">
+    <span id="score-live">✓ 0</span>
+    <span id="timer">60</span>
+  </div>
+  <div id="word-card">
+    <div id="word"></div>
+    <div id="word-en"></div>
+  </div>
+  <div class="controls">
+    <button id="btn-pass" class="ctrl-btn">Pasar ⟳</button>
+    <button id="btn-correct" class="ctrl-btn">✓ ¡Correcto!</button>
+  </div>
+  <div class="hint">Teclado: ← Pasar &nbsp;·&nbsp; → Correcto</div>
+</section>
+
+<!-- Results -->
+<section id="screen-results" class="screen">
+  <h1>⏰ ¡Se acabó el tiempo!</h1>
+  <div id="final-score">0</div>
+  <div class="result-lists">
+    <div class="result-col">
+      <h3>✅ Adivinadas</h3>
+      <ul id="list-correct"></ul>
+    </div>
+    <div class="result-col">
+      <h3>⏭️ Pasadas</h3>
+      <ul id="list-passed"></ul>
+    </div>
+  </div>
+  <button id="btn-again" class="big-btn">🔁 Jugar otra vez</button>
+  <button id="btn-home" class="link-btn">Elegir otra categoría</button>
+</section>
+
+<script>
+const DECK = {
+  animales: {
+    name: "Animales",
+    emoji: "🦁",
+    words: [
+      ["Perro", "Dog"], ["Gato", "Cat"], ["Elefante", "Elephant"], ["Mono", "Monkey"],
+      ["León", "Lion"], ["Pájaro", "Bird"], ["Serpiente", "Snake"], ["Pez", "Fish"],
+      ["Vaca", "Cow"], ["Pingüino", "Penguin"], ["Jirafa", "Giraffe"], ["Rana", "Frog"],
+      ["Caballo", "Horse"], ["Tiburón", "Shark"]
+    ]
+  },
+  comida: {
+    name: "Comida y Bebida",
+    emoji: "🍕",
+    words: [
+      ["Pizza", "Pizza"], ["Helado", "Ice cream"], ["Manzana", "Apple"], ["Tacos", "Tacos"],
+      ["Chocolate", "Chocolate"], ["Café", "Coffee"], ["Hamburguesa", "Hamburger"],
+      ["Plátano / Banana", "Banana"], ["Queso", "Cheese"], ["Pan", "Bread"],
+      ["Papas fritas", "French fries"], ["Sopa", "Soup"], ["Agua", "Water"],
+      ["Pastel / Torta", "Cake"]
+    ]
+  },
+  acciones: {
+    name: "Acciones y Deportes",
+    emoji: "⚽",
+    words: [
+      ["Nadar", "To swim"], ["Bailar", "To dance"], ["Cantar", "To sing"], ["Correr", "To run"],
+      ["Dormir", "To sleep"], ["Fútbol", "Soccer"], ["Cocinar", "To cook"],
+      ["Manejar / Conducir", "To drive"], ["Tocar la guitarra", "To play guitar"],
+      ["Pintar", "To paint"], ["Patinar", "To skate"], ["Tomar una foto", "To take a photo"],
+      ["Cepillarse los dientes", "To brush teeth"]
+    ]
+  },
+  objetos: {
+    name: "Objetos de la Casa",
+    emoji: "🏠",
+    words: [
+      ["Teléfono / Celular", "Phone"], ["Cama", "Bed"], ["Cuchara", "Spoon"],
+      ["Reloj", "Clock / Watch"], ["Zapatos", "Shoes"], ["Espejo", "Mirror"],
+      ["Silla", "Chair"], ["Televisor", "TV"], ["Llaves", "Keys"], ["Ventana", "Window"],
+      ["Almohada", "Pillow"], ["Computadora", "Computer"]
+    ]
+  },
+  famosos: {
+    name: "Personajes Famosos",
+    emoji: "🌟",
+    words: [
+      ["Mickey Mouse", ""], ["Batman", ""], ["Elsa", "Frozen"], ["Harry Potter", ""],
+      ["El Hombre Araña", "Spider-Man"], ["Mario Bros", ""], ["Bob Esponja", "SpongeBob"],
+      ["Shrek", ""], ["Barbie", ""], ["Pikachu", ""], ["Santa Claus", "Papá Noel"]
+    ]
+  }
+};
+
+const ROUND_SECONDS = 60;
+
+const screens = {
+  home: document.getElementById("screen-home"),
+  countdown: document.getElementById("screen-countdown"),
+  game: document.getElementById("screen-game"),
+  results: document.getElementById("screen-results")
+};
+
+let queue = [], correct = [], passed = [], current = null;
+let timeLeft = ROUND_SECONDS, timerId = null, currentCatKey = null, playing = false;
+
+function show(name) {
+  Object.values(screens).forEach(s => s.classList.remove("active"));
+  screens[name].classList.add("active");
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildHome() {
+  const wrap = document.getElementById("cats");
+  Object.entries(DECK).forEach(([key, cat]) => {
+    const btn = document.createElement("button");
+    btn.className = "cat-btn";
+    btn.innerHTML = `<span class="emoji">${cat.emoji}</span>${cat.name}<span class="count">${cat.words.length} palabras</span>`;
+    btn.addEventListener("click", () => startCountdown(key));
+    wrap.appendChild(btn);
+  });
+  const all = document.createElement("button");
+  const total = Object.values(DECK).reduce((n, c) => n + c.words.length, 0);
+  all.className = "cat-btn all";
+  all.innerHTML = `<span class="emoji">🎲</span>¡Todo mezclado!<span class="count">${total} palabras</span>`;
+  all.addEventListener("click", () => startCountdown("all"));
+  wrap.appendChild(all);
+}
+
+function wordsFor(catKey) {
+  if (catKey === "all") return Object.values(DECK).flatMap(c => c.words);
+  return DECK[catKey].words;
+}
+
+function startCountdown(catKey) {
+  currentCatKey = catKey;
+  show("countdown");
+  let n = 3;
+  const num = document.getElementById("countdown-num");
+  num.textContent = n;
+  const id = setInterval(() => {
+    n--;
+    if (n > 0) {
+      num.textContent = n;
+    } else {
+      clearInterval(id);
+      startRound();
+    }
+  }, 1000);
+}
+
+function startRound() {
+  queue = shuffle(wordsFor(currentCatKey));
+  correct = [];
+  passed = [];
+  timeLeft = ROUND_SECONDS;
+  playing = true;
+  updateHud();
+  nextWord();
+  show("game");
+  timerId = setInterval(tick, 1000);
+}
+
+function tick() {
+  timeLeft--;
+  updateHud();
+  if (timeLeft <= 0) endRound();
+}
+
+function updateHud() {
+  const t = document.getElementById("timer");
+  t.textContent = timeLeft;
+  t.classList.toggle("low", timeLeft <= 10);
+  document.getElementById("score-live").textContent = "✓ " + correct.length;
+}
+
+function nextWord() {
+  if (queue.length === 0) {
+    // Recycle passed words if the deck runs out before the timer.
+    if (passed.length > 0) {
+      queue = shuffle(passed);
+      passed = [];
+    } else {
+      endRound();
+      return;
+    }
+  }
+  current = queue.shift();
+  document.getElementById("word").textContent = current[0];
+  document.getElementById("word-en").textContent = current[1];
+}
+
+function flash(type) {
+  const card = document.getElementById("word-card");
+  card.classList.add("flash-" + type);
+  setTimeout(() => card.classList.remove("flash-" + type), 180);
+}
+
+function markCorrect() {
+  if (!playing || !current) return;
+  correct.push(current);
+  current = null;
+  flash("good");
+  updateHud();
+  nextWord();
+}
+
+function markPass() {
+  if (!playing || !current) return;
+  passed.push(current);
+  current = null;
+  flash("pass");
+  nextWord();
+}
+
+function endRound() {
+  playing = false;
+  clearInterval(timerId);
+  document.getElementById("final-score").textContent = correct.length;
+  fillList("list-correct", correct, "¡Ninguna esta vez!");
+  fillList("list-passed", current ? passed.concat([current]) : passed, "—");
+  show("results");
+}
+
+function fillList(id, items, emptyMsg) {
+  const ul = document.getElementById(id);
+  ul.innerHTML = "";
+  if (items.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = emptyMsg;
+    li.style.opacity = "0.5";
+    ul.appendChild(li);
+    return;
+  }
+  items.forEach(([es, en]) => {
+    const li = document.createElement("li");
+    li.textContent = es + " ";
+    if (en) {
+      const span = document.createElement("span");
+      span.className = "en";
+      span.textContent = "(" + en + ")";
+      li.appendChild(span);
+    }
+    ul.appendChild(li);
+  });
+}
+
+document.getElementById("btn-correct").addEventListener("click", markCorrect);
+document.getElementById("btn-pass").addEventListener("click", markPass);
+document.getElementById("btn-again").addEventListener("click", () => startCountdown(currentCatKey));
+document.getElementById("btn-home").addEventListener("click", () => show("home"));
+
+document.addEventListener("keydown", e => {
+  if (!playing) return;
+  if (e.key === "ArrowRight") markCorrect();
+  if (e.key === "ArrowLeft") markPass();
+});
+
+buildHome();
+</script>
+</body>
+</html>
