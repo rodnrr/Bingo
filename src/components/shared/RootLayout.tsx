@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
-  Search, PlusCircle, Package, ShoppingBag, UserCircle, Menu, X, Mail, LogOut,
+  Search, PlusCircle, Package, ShoppingBag, UserCircle, Menu, X, Mail, LogOut, ShieldCheck,
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useAuthStore, isMember } from '@/lib/store'
@@ -66,6 +66,15 @@ export default function RootLayout() {
           <div className="flex items-center gap-2">
             {userId ? (
               <>
+                {profile?.is_admin && (
+                  <Link
+                    to="/admin"
+                    className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50 md:flex dark:text-primary-400 dark:hover:bg-slate-800"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Admin
+                  </Link>
+                )}
                 <Link
                   to="/account"
                   className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 md:flex dark:text-slate-300 dark:hover:bg-slate-800"
@@ -113,6 +122,15 @@ export default function RootLayout() {
                 ))}
               {userId && (
                 <>
+                  {profile?.is_admin && (
+                    <NavLink
+                      to="/admin"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-primary-700 hover:bg-gray-100 dark:text-primary-400 dark:hover:bg-slate-800"
+                    >
+                      <ShieldCheck className="h-4 w-4" /> Admin
+                    </NavLink>
+                  )}
                   <NavLink
                     to="/account"
                     onClick={() => setMenuOpen(false)}
@@ -139,9 +157,15 @@ export default function RootLayout() {
 
       <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-500 dark:border-slate-700">
         <Container>
+          <nav className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1">
+            <Link to="/legal/terms"   className="hover:text-primary-600">Terms of Service</Link>
+            <Link to="/legal/rules"   className="hover:text-primary-600">Community Rules</Link>
+            <Link to="/legal/privacy" className="hover:text-primary-600">Privacy</Link>
+          </nav>
           <p>Been-go! — invite only. Be good to each other.</p>
           <p className="mt-1 text-xs">
-            Payments handled by Stripe. Been-go never sees your card or bank details.
+            Been-go! is a venue, not the seller. Payments are handled by Stripe — we never
+            see your card or bank details.
           </p>
         </Container>
       </footer>

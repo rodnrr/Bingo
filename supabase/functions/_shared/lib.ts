@@ -19,8 +19,11 @@ export const CORS = {
 
 export const APP_URL = Deno.env.get('APP_URL') ?? 'http://localhost:5173'
 
-/** Platform take, in basis points. 800 = 8%. */
-export const FEE_BPS = Number(Deno.env.get('MARKETPLACE_FEE_BPS') ?? '800')
+// The platform fee is deliberately NOT an env var. It lives in the
+// platform_settings row, so the percentage a seller is shown before
+// listing and the percentage create-checkout charges are the same
+// number read from the same place. Read it with the current_fee_bps()
+// RPC.
 
 export const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
   apiVersion: '2025-01-27.acacia',
@@ -54,8 +57,17 @@ export class HttpError extends Error {
  * Resolve the calling user from the Authorization header, and confirm
  * they are an active member. Throws HttpError, which the handlers
  * translate into a response.
+ *
+ * `requireTerms` adds the agreement check for the operations that
+ * create an obligation. It is checked here as well as in RLS because
+ * these functions run with the service-role key, which bypasses RLS —
+ * the policy would not fire on this path.
  */
-export async function requireUser(req: Request, db: SupabaseClient) {
+export async function requireUser(
+  req: Request,
+  db: SupabaseClient,
+  opts: { requireTerms?: boolean } = {},
+) {
   const authHeader = req.headers.get('Authorization') ?? ''
   const token = authHeader.replace(/^Bearer\s+/i, '')
   if (!token) throw new HttpError(401, 'Sign in first')
@@ -70,8 +82,25 @@ export async function requireUser(req: Request, db: SupabaseClient) {
     .single()
 
   if (!profile) throw new HttpError(403, 'No profile for this account')
+  if (profile.status === 'suspended') {
+    throw new HttpError(403, 'This account is suspended')
+  }
   if (profile.status !== 'active') {
-    throw new HttpError(403, 'Redeem an invite code before using Been-go')
+    throw new HttpError(403, 'Redeem an invite code before using Been-go!')
+  }
+
+  if (opts.requireTerms) {
+    const { data: version } = await db.rpc('current_terms_version')
+    const { data: accepted } = await db
+      .from('terms_acceptances')
+      .select('version')
+      .eq('user_id', profile.id)
+      .eq('version', version)
+      .maybeSingle()
+
+    if (!accepted) {
+      throw new HttpError(403, 'Accept the current terms before buying or selling')
+    }
   }
 
   return { user: data.user, profile }

@@ -90,6 +90,10 @@ export interface Offer {
   status: OfferStatus
   created_at: string
   responded_at: string | null
+  /** Pending offers lapse at this time if the seller never responds. */
+  expires_at: string
+  /** Set on acceptance: the buyer must pay by this time. */
+  pay_by: string | null
 
   listing?: Listing
   buyer?: Pick<Profile, 'id' | 'display_name' | 'avatar_url'>
@@ -147,6 +151,80 @@ export interface Invite {
   expires_at: string
   revoked_at: string | null
   created_at: string
+}
+
+export interface PlatformSettings {
+  id: boolean
+  fee_bps: number
+  terms_version: string
+  max_price_cents: number
+  min_price_cents: number
+  support_email: string
+  updated_at: string
+}
+
+export type ReportReason =
+  | 'prohibited_item'
+  | 'counterfeit'
+  | 'misleading'
+  | 'not_as_described'
+  | 'harassment'
+  | 'spam'
+  | 'suspected_fraud'
+  | 'other'
+
+export type ReportStatus = 'open' | 'reviewing' | 'actioned' | 'dismissed'
+
+export interface Report {
+  id: string
+  reporter_id: string
+  listing_id: string | null
+  reported_user_id: string | null
+  order_id: string | null
+  reason: ReportReason
+  detail: string | null
+  status: ReportStatus
+  admin_note: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+
+  reporter?: Pick<Profile, 'id' | 'display_name'>
+  listing?: Pick<Listing, 'id' | 'title' | 'seller_id' | 'status'>
+}
+
+export interface AdminAction {
+  id: string
+  admin_id: string | null
+  action: string
+  target_type: string
+  target_id: string | null
+  detail: string | null
+  created_at: string
+
+  admin?: Pick<Profile, 'id' | 'display_name'>
+}
+
+export interface AdminStats {
+  members_active: number
+  members_pending: number
+  members_suspended: number
+  listings_active: number
+  orders_paid: number
+  reports_open: number
+  gmv_cents: number
+  fees_cents: number
+}
+
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  prohibited_item:  'Prohibited item',
+  counterfeit:      'Counterfeit or replica',
+  misleading:       'Misleading listing',
+  not_as_described: 'Not as described',
+  harassment:       'Harassment',
+  spam:             'Spam',
+  suspected_fraud:  'Suspected fraud',
+  other:            'Something else',
 }
 
 export interface ToastMessage {

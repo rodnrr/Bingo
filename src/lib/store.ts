@@ -10,29 +10,59 @@ interface AuthState {
   userId:    string | null
   email:     string | null
   profile:   Profile | null
+  /** Version currently in force, from platform_settings. */
+  termsVersion:  string | null
+  /** Whether this user has accepted that exact version. */
+  termsAccepted: boolean
   isLoading: boolean
-  setSession: (session: { userId: string; email: string | null; profile: Profile | null }) => void
+  setSession: (session: {
+    userId: string
+    email: string | null
+    profile: Profile | null
+    termsVersion?: string | null
+    termsAccepted?: boolean
+  }) => void
   setProfile: (profile: Profile | null) => void
+  setTerms:   (version: string | null, accepted: boolean) => void
   clear:      () => void
   setLoading: (loading: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  userId:    null,
-  email:     null,
-  profile:   null,
-  isLoading: true,
-  setSession: ({ userId, email, profile }) =>
-    set({ userId, email, profile, isLoading: false }),
+  userId:        null,
+  email:         null,
+  profile:       null,
+  termsVersion:  null,
+  termsAccepted: false,
+  isLoading:     true,
+  setSession: ({ userId, email, profile, termsVersion, termsAccepted }) =>
+    set({
+      userId,
+      email,
+      profile,
+      termsVersion:  termsVersion ?? null,
+      termsAccepted: termsAccepted ?? false,
+      isLoading: false,
+    }),
   setProfile: (profile) => set({ profile }),
-  clear:      () => set({ userId: null, email: null, profile: null, isLoading: false }),
+  setTerms:   (termsVersion, termsAccepted) => set({ termsVersion, termsAccepted }),
+  clear: () => set({
+    userId: null, email: null, profile: null,
+    termsVersion: null, termsAccepted: false, isLoading: false,
+  }),
   setLoading: (isLoading) => set({ isLoading }),
 }))
 
 /** Signed in AND past the invite gate. */
 export const isMember = (profile: Profile | null): boolean => profile?.status === 'active'
 
-/** Can actually receive money — the gate on listing something for sale. */
+/**
+ * Can actually receive money — the gate on listing something for sale.
+ *
+ * Note what this is not: it is not a permission check. RLS and the
+ * Edge Functions decide what anyone may do. This only decides what the
+ * interface bothers offering them.
+ */
 export const canSell = (profile: Profile | null): boolean =>
   profile?.status === 'active' && profile.stripe_charges_enabled === true
 

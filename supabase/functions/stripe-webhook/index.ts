@@ -83,39 +83,45 @@ Deno.serve(async (req) => {
 
       if (!order) break   // already processed, or cancelled — nothing to do
 
-      // Decrement stock, and close the listing when it hits zero.
-      const { data: listing } = await db
-        .from('listings')
-        .select('quantity')
-        .eq('id', order.listing_id)
-        .single()
+      // Stock was already taken when checkout opened (create-checkout
+      // reserves it, so two buyers cannot both pay for the last item).
+      // All that remains is to close the listing if that was the last one.
+      await db.rpc('settle_listing_after_sale', { p_listing_id: order.listing_id })
 
-      if (listing) {
-        const remaining = Math.max(0, listing.quantity - order.quantity)
-        await db
-          .from('listings')
-          .update({
-            quantity: remaining,
-            status:   remaining === 0 ? 'sold' : 'active',
-            sold_at:  remaining === 0 ? new Date().toISOString() : null,
-          })
-          .eq('id', order.listing_id)
-      }
+      // The listing's offers are now moot. Retiring them stops a seller
+      // accepting an offer on something they no longer have.
+      await db
+        .from('offers')
+        .update({ status: 'expired', responded_at: new Date().toISOString() })
+        .eq('listing_id', order.listing_id)
+        .eq('status', 'pending')
 
       break
     }
 
     // ── Buyer abandoned checkout ─────────────────────────────────
+    // The reservation has to come back, and it has to come back exactly
+    // once — hence the conditional update first, releasing stock only
+    // if this delivery is the one that actually moved the row.
     case 'checkout.session.expired': {
       const session = event.data.object as { metadata: Record<string, string> | null }
       const orderId = session.metadata?.order_id
       if (!orderId) break
 
-      await db
+      const { data: order } = await db
         .from('orders')
         .update({ status: 'cancelled' })
         .eq('id', orderId)
         .eq('status', 'pending_payment')
+        .select()
+        .maybeSingle()
+
+      if (order) {
+        await db.rpc('release_listing_stock', {
+          p_listing_id: order.listing_id,
+          p_qty: order.quantity,
+        })
+      }
       break
     }
 

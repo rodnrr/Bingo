@@ -9,7 +9,8 @@
 
 import { supabase, callFunction, PHOTO_BUCKET } from './supabase'
 import type {
-  Category, Invite, Listing, ListingCondition, Offer, Order, Profile,
+  AdminAction, AdminStats, Category, Invite, Listing, ListingCondition, MemberStatus,
+  Offer, Order, PlatformSettings, Profile, Report, ReportReason, ReportStatus,
 } from '@/types'
 
 const LISTING_SELECT = `
@@ -29,6 +30,37 @@ function orderPhotos(listing: Listing): Listing {
     listing.photos = [...listing.photos].sort((a, b) => a.position - b.position)
   }
   return listing
+}
+
+// ── Platform settings ────────────────────────────────────────────
+// The single source of truth for the fee percentage and the terms
+// version. The SellPage estimate and create-checkout both read it, so
+// the number a seller is shown is the number they are charged.
+
+export async function getSettings(): Promise<PlatformSettings> {
+  return unwrap(
+    await supabase.from('platform_settings').select('*').eq('id', true).single(),
+  ) as PlatformSettings
+}
+
+// ── Terms ────────────────────────────────────────────────────────
+
+/** Every version this user has ever accepted, newest first. */
+export async function myTermsAcceptances(userId: string): Promise<string[]> {
+  const rows = unwrap(
+    await supabase
+      .from('terms_acceptances')
+      .select('version')
+      .eq('user_id', userId)
+      .order('accepted_at', { ascending: false }),
+  ) as { version: string }[]
+
+  return rows.map((r) => r.version)
+}
+
+export async function acceptTerms(version: string): Promise<void> {
+  const { error } = await supabase.rpc('accept_terms', { p_version: version })
+  if (error) throw new Error(error.message)
 }
 
 // ── Profile ──────────────────────────────────────────────────────
@@ -135,6 +167,10 @@ export async function browseListings(args: BrowseArgs = {}): Promise<Listing[]> 
     .from('listings')
     .select(LISTING_SELECT)
     .eq('status', 'active')
+    // Stock is reserved the moment a buyer opens checkout, so an active
+    // listing can legitimately have nothing left in it for up to half an
+    // hour. Those must not appear as buyable.
+    .gt('quantity', 0)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
@@ -384,4 +420,136 @@ export async function startCheckout(args: {
 export async function payoutLink(action: 'onboard' | 'dashboard'): Promise<string> {
   const { url } = await callFunction<{ url: string }>('connect-onboarding', { action })
   return url
+}
+
+/**
+ * Hand back the stock held by an abandoned checkout.
+ *
+ * Stripe only tells us a session was abandoned when it expires, 30
+ * minutes later. Without this, backing out of checkout on a
+ * one-of-a-kind listing would hide it from everyone until then.
+ * Idempotent, and safe to race against the webhook.
+ */
+export async function releasePendingOrder(orderId: string): Promise<void> {
+  await supabase.rpc('release_own_pending_order', { p_order_id: orderId })
+}
+
+// ── Reports ──────────────────────────────────────────────────────
+
+export async function reportListing(
+  reporterId: string,
+  listingId: string,
+  reason: ReportReason,
+  detail?: string,
+): Promise<void> {
+  const { error } = await supabase.from('reports').insert({
+    reporter_id: reporterId,
+    listing_id: listingId,
+    reason,
+    detail: detail || null,
+  })
+
+  // The partial unique index rejects a second open report on the same
+  // target by the same person. That is not an error worth alarming
+  // them about — their report is already in the queue.
+  if (error) {
+    if (error.code === '23505') return
+    throw new Error(error.message)
+  }
+}
+
+// ── Admin ────────────────────────────────────────────────────────
+// Every one of these is enforced server-side by is_admin() inside a
+// SECURITY DEFINER function. Hiding the admin nav is presentation;
+// these calls fail for a non-admin regardless of what the UI shows.
+
+export async function adminStats(): Promise<AdminStats> {
+  return unwrap(await supabase.rpc('admin_stats')) as AdminStats
+}
+
+export async function adminListMembers(search?: string): Promise<Profile[]> {
+  let query = supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (search?.trim()) query = query.ilike('display_name', `%${search.trim()}%`)
+
+  return unwrap(await query) as Profile[]
+}
+
+export async function adminSetMemberStatus(
+  userId: string,
+  status: MemberStatus,
+  reason?: string,
+): Promise<Profile> {
+  return unwrap(
+    await supabase.rpc('admin_set_member_status', {
+      p_user_id: userId,
+      p_status: status,
+      p_reason: reason ?? null,
+    }),
+  ) as Profile
+}
+
+export async function adminGrantInvites(userId: string, count: number): Promise<Profile> {
+  return unwrap(
+    await supabase.rpc('admin_grant_invites', { p_user_id: userId, p_count: count }),
+  ) as Profile
+}
+
+export async function adminListReports(status?: ReportStatus): Promise<Report[]> {
+  let query = supabase
+    .from('reports')
+    .select(`
+      *,
+      reporter:profiles!reports_reporter_id_fkey(id, display_name),
+      listing:listings!reports_listing_id_fkey(id, title, seller_id, status)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (status) query = query.eq('status', status)
+
+  return unwrap(await query) as Report[]
+}
+
+export async function adminResolveReport(
+  reportId: string,
+  status: ReportStatus,
+  note?: string,
+): Promise<Report> {
+  return unwrap(
+    await supabase.rpc('admin_resolve_report', {
+      p_report_id: reportId,
+      p_status: status,
+      p_note: note ?? null,
+    }),
+  ) as Report
+}
+
+export async function adminRemoveListing(listingId: string, reason: string): Promise<Listing> {
+  return unwrap(
+    await supabase.rpc('admin_remove_listing', {
+      p_listing_id: listingId,
+      p_reason: reason,
+    }),
+  ) as Listing
+}
+
+export async function adminSetFeeBps(feeBps: number): Promise<PlatformSettings> {
+  return unwrap(
+    await supabase.rpc('admin_set_fee_bps', { p_fee_bps: feeBps }),
+  ) as PlatformSettings
+}
+
+export async function adminRecentActions(): Promise<AdminAction[]> {
+  return unwrap(
+    await supabase
+      .from('admin_actions')
+      .select('*, admin:profiles!admin_actions_admin_id_fkey(id, display_name)')
+      .order('created_at', { ascending: false })
+      .limit(50),
+  ) as AdminAction[]
 }

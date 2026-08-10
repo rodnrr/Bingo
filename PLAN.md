@@ -33,23 +33,37 @@ deliberate: it keeps you out of PCI compliance entirely.
    - Region: closest to your buyers
    - Save the database password somewhere safe.
 2. Wait for it to finish provisioning (~2 min).
-3. Go to **SQL Editor** → **New query**. Open the migration files in
+3. Go to **Database → Extensions** and enable **`pg_cron`**. Do this *before*
+   the migrations: with it on, the background cleanup jobs schedule themselves.
+   Without it they still work, you just have to run them by hand.
+
+4. Go to **SQL Editor** → **New query**. Open the migration files in
    `supabase/migrations/` and run them **in numeric order**, one at a time:
    - `001_initial_schema.sql` — tables
    - `002_rls_policies.sql` — the security rules
    - `003_rpc_functions.sql` — invites, offers, shipping
    - `004_storage_and_seed.sql` — photo storage + categories
+   - `005_settings_and_terms.sql` — platform settings + terms acceptance
+   - `006_inventory_reservation.sql` — stock held at checkout
+   - `007_offer_expiry.sql` — offer deadlines
+   - `008_moderation_and_safety.sql` — reports, suspensions, admin actions
 
    Each should say "Success. No rows returned." If one errors, stop and fix it
    before running the next — they build on each other.
 
-4. Go to **Project Settings → API** and copy two values:
+5. Set your support email, which appears in the legal documents and to members:
+
+   ```sql
+   UPDATE platform_settings SET support_email = 'you@yourdomain.com';
+   ```
+
+6. Go to **Project Settings → API** and copy two values:
    - Project URL
    - `anon` / `public` key
 
 **Check it worked:** Table Editor should show `profiles`, `listings`, `orders`,
-`invites`, `offers`, `categories`, `listing_photos`, and `categories` should
-have 12 rows.
+`invites`, `offers`, `reports`, `platform_settings`, `terms_acceptances`;
+`categories` should have 12 rows and `platform_settings` exactly 1.
 
 ---
 
@@ -87,10 +101,12 @@ UPDATE profiles
  WHERE id = (SELECT id FROM auth.users WHERE email = 'you@example.com');
 ```
 
-Refresh the browser. You're in, you're the admin, and you have 50 invites.
+Refresh the browser. You'll be asked to read and accept the terms — do it, the
+same as any member will. Then you're in, you're the admin, and you have 50
+invites.
 
-**Check it worked:** `/browse` loads instead of bouncing you to `/welcome`, and
-`/invites` lets you create a code.
+**Check it worked:** `/browse` loads, `/invites` lets you create a code, and an
+**Admin** link appears in the header.
 
 ---
 
@@ -121,8 +137,11 @@ supabase link --project-ref YOUR_PROJECT_REF     # from your Supabase URL
 
 # Secrets — these live on the server, never in the app bundle
 supabase secrets set STRIPE_SECRET_KEY=sk_test_...
-supabase secrets set MARKETPLACE_FEE_BPS=800     # 800 = 8% — your cut
 supabase secrets set APP_URL=http://localhost:5173
+
+# Note: your platform fee is NOT set here. It lives in the database
+# (platform_settings.fee_bps) so the percentage sellers are shown and the
+# percentage you charge are the same number. Change it at /admin → Settings.
 
 supabase functions deploy connect-onboarding
 supabase functions deploy create-checkout
@@ -204,6 +223,40 @@ Stripe → Webhooks → your endpoint for the failed delivery and its error.
 
 ---
 
+## ⚠️ Before real money: the legal bit (30 min + a lawyer)
+
+Been-go! ships with a Terms of Service, a Privacy Policy, and Community Rules
+including a prohibited-items list. Members must read and accept them before they
+can list, offer, or buy, and every acceptance is recorded permanently.
+
+They are **drafts with placeholders in them, and no lawyer has read them.**
+
+1. Read `src/legal/README.md`. It lists every placeholder and which sections
+   most need real legal input.
+2. Fill in every `[BRACKETED]` value in `src/legal/terms.md`,
+   `src/legal/privacy.md`, and `src/legal/rules.md`. Check none are left:
+
+   ```bash
+   grep -n '\[' src/legal/*.md
+   ```
+
+3. Have a lawyer in your jurisdiction read them. For a marketplace this size
+   that is usually a one-off review, and it is far cheaper than the first
+   dispute you have to handle without it.
+4. Ask that lawyer two things beyond the documents:
+   - Should you form an LLC or equivalent before taking other people's money?
+     (That entity is what separates the marketplace's liabilities from your
+     personal ones.)
+   - Do you need to collect or report sales tax anywhere you operate?
+
+The app does not check any of this. It will happily render `[SUPPORT EMAIL]` to
+a real member. This step is entirely on you.
+
+**Check it worked:** visit `/legal/terms` on your deployed site and read it as a
+stranger would. No brackets, correct entity name, an email that reaches you.
+
+---
+
 ## Step 7 — Go live with real money (20 min)
 
 Only after Step 6 works end to end in test mode.
@@ -230,20 +283,21 @@ network grows by vouching rather than by advertising. That's the whole point of
 the door policy: everyone here can be traced back to someone who took a chance
 on them.
 
-To give a specific member more invites:
+Everything you need to run it day to day is at **/admin**:
 
-```sql
-UPDATE profiles SET invites_remaining = 10 WHERE display_name = 'Their Name';
-```
+| Tab | What it does |
+|---|---|
+| **Overview** | Members, live listings, open reports, total sold, your fees |
+| **Members** | Suspend, reinstate, top up someone's invites |
+| **Reports** | Triage what members flag — remove a listing, action, or dismiss |
+| **Settings** | Change your fee, see the append-only log of every admin action |
 
-To suspend someone:
+Suspending a member takes their listings down immediately and blocks new
+checkouts against them — not just the buttons, the data. The rules are in the
+database, not the browser.
 
-```sql
-UPDATE profiles SET status = 'suspended' WHERE display_name = 'Their Name';
-```
-
-They immediately lose access to everything — not just the buttons, the data.
-The rules are in the database, not the browser.
+Orders they have already been paid for stay their responsibility to ship, which
+is why suspension is not the same as deletion.
 
 ---
 
@@ -258,15 +312,9 @@ The rules are in the database, not the browser.
 So: **$0/month until you have real volume.** Stripe's cut comes out of each
 sale, and your 8% platform fee comes out on top of that, into your account.
 
-To change your cut, change one number:
-
-```bash
-supabase secrets set MARKETPLACE_FEE_BPS=500   # 5%
-supabase functions deploy create-checkout
-```
-
-(Also update `FEE_BPS` in `src/pages/SellPage.tsx` so the seller's estimate
-matches what you actually take.)
+To change your cut: **/admin → Settings → Platform fee**. It takes effect on the
+next checkout, and the seller's estimate on the listing form updates with it —
+both read the same row, so they cannot drift apart.
 
 ---
 

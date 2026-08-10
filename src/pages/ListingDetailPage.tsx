@@ -4,9 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ImageOff, Truck, Package, Eye } from 'lucide-react'
 import {
   getListing, recordView, startCheckout, makeOffer, offersOnListing, respondToOffer,
+  releasePendingOrder,
 } from '@/lib/api'
 import { money, timeAgo, parseMoney } from '@/lib/format'
 import { useAuthStore, toast } from '@/lib/store'
+import ReportDialog from '@/components/marketplace/ReportDialog'
 import {
   Button, Card, Container, ErrorNote, LoadingBlock,
 } from '@/components/ui'
@@ -42,11 +44,22 @@ export default function ListingDetailPage() {
     if (id) recordView(id)
   }, [id])
 
+  // Coming back from an abandoned checkout. The order is holding stock
+  // that Stripe will not release until the session expires half an hour
+  // from now, so hand it back immediately rather than hiding a
+  // one-of-a-kind listing from everyone in the meantime.
   useEffect(() => {
-    if (params.get('checkout') === 'cancelled') {
-      toast.info('Checkout cancelled — nothing was charged.')
+    if (params.get('checkout') !== 'cancelled') return
+
+    const orderId = params.get('order')
+    if (orderId) {
+      releasePendingOrder(orderId)
+        .then(() => queryClient.invalidateQueries({ queryKey: ['listing', id] }))
+        .catch(() => { /* the sweeper will get it */ })
     }
-  }, [params])
+
+    toast.info('Checkout cancelled — nothing was charged.')
+  }, [params, id, queryClient])
 
   const buy = useMutation({
     mutationFn: (offerId?: string) =>
@@ -181,6 +194,12 @@ export default function ListingDetailPage() {
                   <p className="text-sm font-medium text-success-600">
                     Your offer of {money(myAcceptedOffer.amount_cents)} was accepted.
                   </p>
+                  {myAcceptedOffer.pay_by && (
+                    <p className="text-xs text-warning-600">
+                      Pay by {new Date(myAcceptedOffer.pay_by).toLocaleString()} or the
+                      offer lapses and the seller is free again.
+                    </p>
+                  )}
                   <Button
                     fullWidth
                     size="lg"
@@ -205,6 +224,7 @@ export default function ListingDetailPage() {
                 myPendingOffer ? (
                   <p className="text-center text-sm text-gray-600 dark:text-slate-400">
                     Offer of {money(myPendingOffer.amount_cents)} sent — waiting on the seller.
+                    It lapses {timeAgo(myPendingOffer.expires_at)}.
                   </p>
                 ) : (
                   <form
@@ -294,6 +314,8 @@ export default function ListingDetailPage() {
           <p className="text-sm text-gray-500">
             Sold by <strong>{listing.seller?.display_name ?? 'a member'}</strong>
           </p>
+
+          {!isSeller && <ReportDialog listingId={listing.id} />}
         </div>
       </div>
     </Container>

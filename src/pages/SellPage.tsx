@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle } from 'lucide-react'
 import {
-  createListing, getListing, listCategories, updateListing, removeListing,
+  createListing, getListing, getSettings, listCategories, updateListing, removeListing,
   type ListingDraft,
 } from '@/lib/api'
 import { money, parseMoney } from '@/lib/format'
@@ -13,8 +13,6 @@ import {
   Button, Card, Container, ErrorNote, LoadingBlock, PageHeading,
 } from '@/components/ui'
 import { CONDITION_LABELS, type ListingCondition } from '@/types'
-
-const FEE_BPS = 800   // mirror of MARKETPLACE_FEE_BPS, for the estimate only
 
 interface FormState {
   title: string
@@ -46,6 +44,15 @@ export default function SellPage() {
     queryKey: ['categories'],
     queryFn: listCategories,
     staleTime: 1000 * 60 * 60,
+  })
+
+  // The fee shown here is read from the same platform_settings row that
+  // create-checkout charges against, so this estimate cannot drift away
+  // from the real deduction.
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings,
+    staleTime: 1000 * 60 * 10,
   })
 
   const { data: existing, isLoading } = useQuery({
@@ -123,8 +130,9 @@ export default function SellPage() {
 
   if (id && isLoading) return <LoadingBlock />
 
-  const priceCents = parseMoney(form.price) ?? 0
-  const feeCents   = Math.round((priceCents * FEE_BPS) / 10000)
+  const feeBps      = settings?.fee_bps ?? null
+  const priceCents  = parseMoney(form.price) ?? 0
+  const feeCents    = feeBps === null ? 0 : Math.round((priceCents * feeBps) / 10000)
   const payoutCents = Math.max(0, priceCents - feeCents)
 
   return (
@@ -266,13 +274,13 @@ export default function SellPage() {
           Let buyers make offers
         </label>
 
-        {priceCents > 0 && (
+        {priceCents > 0 && feeBps !== null && (
           <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm dark:bg-slate-700/50">
             <p className="flex justify-between">
               <span>Item price</span><span>{money(priceCents)}</span>
             </p>
             <p className="flex justify-between text-gray-600 dark:text-slate-400">
-              <span>Been-go fee ({FEE_BPS / 100}%)</span><span>−{money(feeCents)}</span>
+              <span>Been-go! fee ({feeBps / 100}%)</span><span>−{money(feeCents)}</span>
             </p>
             <p className="mt-1 flex justify-between border-t border-gray-200 pt-1 font-semibold dark:border-slate-600">
               <span>You receive</span><span>{money(payoutCents)}</span>

@@ -12,6 +12,12 @@ import LoginPage   from '@/pages/LoginPage'
 import SignupPage  from '@/pages/SignupPage'
 import WelcomePage from '@/pages/WelcomePage'
 
+// The legal documents are bundled with the app rather than fetched, so
+// they stay readable when someone most needs them: signed out, or when
+// the database is unreachable.
+import LegalPage     from '@/pages/LegalPage'
+import AgreementPage from '@/pages/AgreementPage'
+
 // Everything behind the invite gate is split per route.
 const BrowsePage        = lazy(() => import('@/pages/BrowsePage'))
 const ListingDetailPage = lazy(() => import('@/pages/ListingDetailPage'))
@@ -25,8 +31,19 @@ const AccountPage       = lazy(() => import('@/pages/AccountPage'))
 const CheckoutReturnPage = lazy(() => import('@/pages/CheckoutReturnPage'))
 const AuthCallbackPage  = lazy(() => import('@/pages/AuthCallbackPage'))
 const NotFoundPage      = lazy(() => import('@/pages/NotFoundPage'))
+const AdminPage         = lazy(() => import('@/pages/admin/AdminPage'))
 
+/** Signed in, invited, and agreed to the current terms. */
 const gated = (element: React.ReactNode) => <RequireMember>{element}</RequireMember>
+
+/**
+ * Signed in and invited, but reachable without having agreed yet —
+ * the account page, so somebody who declines can still find their way
+ * out and manage their profile.
+ */
+const gatedNoTerms = (element: React.ReactNode) => (
+  <RequireMember allowWithoutTerms>{element}</RequireMember>
+)
 
 export default function App() {
   useEffect(() => initAuth(), [])
@@ -42,6 +59,13 @@ export default function App() {
           <Route path="/welcome"       element={<WelcomePage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
+          {/* Legal — readable by anyone, always */}
+          <Route path="/legal"      element={<Navigate to="/legal/terms" replace />} />
+          <Route path="/legal/:doc" element={<LegalPage />} />
+
+          {/* The agreement gate itself */}
+          <Route path="/agreement" element={<AgreementPage />} />
+
           {/* Members only */}
           <Route path="/browse"          element={gated(<BrowsePage />)} />
           <Route path="/listing/:id"     element={gated(<ListingDetailPage />)} />
@@ -52,8 +76,9 @@ export default function App() {
           <Route path="/sales"           element={gated(<SalesPage />)} />
           <Route path="/offers"          element={gated(<OffersPage />)} />
           <Route path="/invites"         element={gated(<InvitesPage />)} />
-          <Route path="/account"         element={gated(<AccountPage />)} />
+          <Route path="/account"         element={gatedNoTerms(<AccountPage />)} />
           <Route path="/orders/return"   element={gated(<CheckoutReturnPage />)} />
+          <Route path="/admin"           element={gated(<AdminPage />)} />
 
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*"    element={<Navigate to="/404" replace />} />

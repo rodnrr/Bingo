@@ -67,6 +67,28 @@ offer is honoured by id, and re-read the same way.
 `orders` for clients at all, and a trigger reverts any client write to the money
 columns. A buyer cannot invent a paid order; a seller cannot edit a total.
 
+### Not overselling the last item
+
+Stock is decremented when checkout **opens**, not when payment lands. The
+decrement is a single conditional `UPDATE ... WHERE quantity >= n`, which
+Postgres evaluates while holding the row lock — so of two buyers racing for the
+last item, exactly one gets a Stripe session and the other is told it is gone.
+
+That means every `pending_payment` order is holding stock, and three separate
+paths give it back: the buyer cancelling, Stripe's session-expired webhook, and
+`release_stale_reservations()` for anything that falls through both.
+
+### Agreements
+
+Terms, Privacy, and Community Rules live in `src/legal/*.md` and are bundled
+into the app, so they render for signed-out visitors and when the database is
+unreachable. Acceptance is recorded in `terms_acceptances` — one row per member
+per version, append-only, with no UPDATE or DELETE policy for anyone including
+admins. Listing, offering, and buying all require the current version in RLS.
+
+**The documents are unreviewed drafts with placeholders in them.** Read
+`src/legal/README.md` before launch.
+
 ### Photos
 
 Uploaded to the `listing-photos` bucket under `{user_id}/{listing_id}/{uuid}`,
@@ -106,6 +128,10 @@ as StreetRise. They are not run by the deploy pipeline.
 | `002_rls_policies.sql` | Every access rule + the column-protection triggers |
 | `003_rpc_functions.sql` | Invites, offers, shipping, search |
 | `004_storage_and_seed.sql` | Photo bucket + 12 categories |
+| `005_settings_and_terms.sql` | One-row settings (the fee), append-only terms acceptance, price ceilings |
+| `006_inventory_reservation.sql` | Stock held at checkout instead of after payment |
+| `007_offer_expiry.sql` | Offer deadlines, enforced at use and swept in the background |
+| `008_moderation_and_safety.sql` | Reports, suspension with teeth, admin actions + audit log |
 
 ## Status
 
@@ -115,9 +141,14 @@ Working:
 - [x] Listings — create, edit, draft/publish, photos, soft delete
 - [x] Browse — full-text search, category and price filters
 - [x] Offers — make, withdraw, accept, decline, pay at the accepted price
+- [x] Offer deadlines — 7 days to respond, 48 hours to pay once accepted
 - [x] Checkout — Stripe hosted, address collection, platform fee
+- [x] Stock reservation — held at checkout, released on abandon (no overselling)
 - [x] Orders — purchases, sales, tracking, delivery confirmation
 - [x] Seller payouts — Stripe Connect Express onboarding + dashboard
+- [x] Terms of Service, Privacy Policy, Community Rules + recorded acceptance
+- [x] Reporting — members report listings, admins triage them
+- [x] Admin console — members, suspensions, invites, reports, fee, audit log
 - [x] RLS on every table, with money columns server-owned
 
 Not built on purpose (see the end of `PLAN.md` for why): buyer↔seller messaging,
@@ -125,13 +156,20 @@ timed auctions, in-app refunds, ratings, shipping labels, escrow.
 
 Known gaps:
 
-- [ ] **The fee percentage lives in two places** — `MARKETPLACE_FEE_BPS` (real)
-      and `FEE_BPS` in `src/pages/SellPage.tsx` (the seller's estimate). Change
-      both together.
-- [ ] **No admin UI.** Suspending a member or topping up invites is a SQL update;
-      the `is_admin` flag and policies exist, the screens do not.
-- [ ] **Offers never expire on their own.** The `expired` status exists but
-      nothing sets it — it needs a scheduled job.
-- [ ] **Quantity is decremented by the webhook only.** Two buyers can both reach
-      checkout for the last item; the second one's payment succeeds and
-      oversells. Fine at small scale, needs a reservation hold before it isn't.
+- [ ] **The legal documents are unreviewed drafts.** They have placeholders in
+      them and no lawyer has read them. See `src/legal/README.md` before launch —
+      this is the one item on this list that can actually hurt you.
+- [ ] **No email is ever sent.** No order confirmations, no "your offer was
+      accepted", no invite emails — members only find out by opening the app.
+      Wiring an Edge Function to Resend or Postmark is the next obvious build.
+- [ ] **Sweepers need pg_cron.** `release_stale_reservations()` and
+      `expire_stale_offers()` are scheduled only if the extension is enabled
+      (Supabase → Database → Extensions), otherwise they are manual. Both are
+      cleanup only: every deadline they enforce is independently re-checked at
+      the point of use, so a sweeper that never runs costs tidiness, not
+      correctness.
+- [ ] **Deleting an auth user fails if they have orders.** `orders` restricts the
+      delete on purpose, to match the 7-year retention in the privacy policy.
+      Suspend instead, or delete the orders first if you genuinely mean to.
+- [ ] **Report handling has no appeals path.** An actioned report is final and
+      the member is not notified. Fine at small scale, not fine at large.
