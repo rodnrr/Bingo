@@ -1,3 +1,11 @@
+> **This repo now holds two separate things.**
+> - **[`app/`](app/) — RiseBay**, an invite-only marketplace (React + Supabase +
+>   Stripe). Start with [`app/PLAN.md`](app/PLAN.md).
+> - **The rest of this README** — ¡En la Cabeza!, the Spanish Heads Up! game
+>   (`index.html`). Unchanged.
+
+---
+
 # 🎉 ¡En la Cabeza! — Heads Up! en Español
 
 A ready-to-play, crowd-pleasing **"Heads Up!"** game deck in Spanish. The vocabulary is
