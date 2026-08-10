@@ -1,117 +1,137 @@
-# 🎉 ¡En la Cabeza! — Heads Up! en Español
+# Been-go!
 
-A ready-to-play, crowd-pleasing **"Heads Up!"** game deck in Spanish. The vocabulary is
-simple, highly recognizable, and fun for all ages and Spanish proficiency levels.
+**List it. It's been gone.**
 
-**▶️ Play it in your browser:** open [`index.html`](index.html) — it's a fully playable
-web version with all five categories, a 60-second timer, and score tracking.
-No installation or internet connection needed once the page is open.
+An invite-only marketplace. Members list what they have, other members buy it,
+and the money goes to the seller's bank account with a platform fee taken off
+the top.
 
-## 🎮 How to Play
+Same stack and conventions as [StreetRise](https://github.com/rodnrr/StreetRise),
+different product.
 
-1. **Set Up:** Open `index.html` on a phone, or write the words below on index cards
-   or slips of paper.
-2. **Gameplay:**
-   - The guesser places the card (or phone) on their forehead **without looking at it**.
-   - Other players give clues, act things out, or make sounds in Spanish (or English,
-     depending on your group's rules) — **without saying the word itself!**
-3. **Timer:** 60 seconds per turn — see how many words you can guess.
-   - In the web version, tap **✓ ¡Correcto!** when the word is guessed and
-     **Pasar ⟳** to skip. On a keyboard: **→** correct, **←** pass.
+**→ Setting it up for the first time? Follow [`PLAN.md`](PLAN.md).** It's the
+step-by-step, account-by-account version of everything below.
 
-## 🦁 Categoría 1: Animales (Animals)
+## Stack
 
-*Perfect for sound effects and charades!*
+| Layer     | Tech                                    |
+|-----------|-----------------------------------------|
+| Frontend  | React 18 + TypeScript + Vite            |
+| Styling   | Tailwind CSS v3                         |
+| State     | Zustand + TanStack Query                |
+| Database  | Supabase (Postgres + Auth + Storage)    |
+| Payments  | Stripe Connect (Express) + Checkout     |
+| Hosting   | Cloudflare Pages                        |
+| CI        | GitHub Actions (typecheck + build)      |
 
-| Español | English |
+## Quick start
+
+```bash
+npm install
+cp .env.example .env.local     # fill in your Supabase URL + anon key
+npm run dev
+```
+
+Other commands: `npm run typecheck`, `npm run lint`, `npm run build`,
+`npm run preview`, `npm run deploy`.
+
+## How the three hard parts work
+
+### The invite gate
+
+Anyone can create an account; nobody can *do* anything with one. Signup writes a
+`profiles` row at `status = 'pending_invite'`, and every RLS policy in the
+database checks `is_member()` — which is `status = 'active'`. The only way to
+flip that is `redeem_invite(code)`.
+
+That means the gate is not a screen someone can skip. A signed-in non-member who
+bypasses the router still reads zero listings, because the fence is in Postgres.
+
+Members get 3 invites each. Codes are single-use, expire in 30 days, and are
+revocable.
+
+### Money
+
+Stripe Connect Express with **destination charges**:
+
+1. Seller onboards through Stripe — bank details go to Stripe, never here.
+2. Buyer pays on Stripe's hosted checkout.
+3. Stripe keeps its processing fee, sends your `application_fee_amount` to the
+   platform, and transfers the rest to the seller.
+
+The prices come from the database, not the browser. `create-checkout` accepts a
+listing id — never an amount — and re-reads every cent server-side. An accepted
+offer is honoured by id, and re-read the same way.
+
+**Only the webhook may mark an order paid.** There is no INSERT policy on
+`orders` for clients at all, and a trigger reverts any client write to the money
+columns. A buyer cannot invent a paid order; a seller cannot edit a total.
+
+### Photos
+
+Uploaded to the `listing-photos` bucket under `{user_id}/{listing_id}/{uuid}`,
+with a storage policy requiring that first path segment to be the uploader's own
+id. Public read, because a listing photo is public the moment the listing is.
+
+## Layout
+
+```
+src/
+├── components/
+│   ├── ui/           # Button, Card, Container, EmptyState… (one file)
+│   ├── shared/       # RootLayout, RequireMember, ErrorBoundary, toasts
+│   └── marketplace/  # ListingCard, PhotoUploader
+├── pages/            # One file per route
+├── lib/
+│   ├── supabase.ts   # Client + Edge Function caller
+│   ├── api.ts        # Every database call the UI makes
+│   ├── auth.ts       # Session ↔ store wiring
+│   ├── store.ts      # Zustand (auth, toasts)
+│   └── format.ts     # Money in/out, timestamps
+└── types/index.ts    # Shared types (hand-written, not generated)
+
+supabase/
+├── migrations/       # 001–004, run BY HAND in the SQL editor, in order
+└── functions/        # connect-onboarding, create-checkout, stripe-webhook
+```
+
+## Migrations
+
+Applied by hand in the Supabase SQL editor, in numeric order — same convention
+as StreetRise. They are not run by the deploy pipeline.
+
+| File | What it adds |
 |---|---|
-| Perro | Dog |
-| Gato | Cat |
-| Elefante | Elephant |
-| Mono | Monkey |
-| León | Lion |
-| Pájaro | Bird |
-| Serpiente | Snake |
-| Pez | Fish |
-| Vaca | Cow |
-| Pingüino | Penguin |
-| Jirafa | Giraffe |
-| Rana | Frog |
-| Caballo | Horse |
-| Tiburón | Shark |
+| `001_initial_schema.sql` | Tables, enums, signup trigger |
+| `002_rls_policies.sql` | Every access rule + the column-protection triggers |
+| `003_rpc_functions.sql` | Invites, offers, shipping, search |
+| `004_storage_and_seed.sql` | Photo bucket + 12 categories |
 
-## 🍕 Categoría 2: Comida y Bebida (Food & Drink)
+## Status
 
-*Great for miming eating or describing tastes.*
+Working:
 
-| Español | English |
-|---|---|
-| Pizza | Pizza |
-| Helado | Ice cream |
-| Manzana | Apple |
-| Tacos | Tacos |
-| Chocolate | Chocolate |
-| Café | Coffee |
-| Hamburguesa | Hamburger |
-| Plátano / Banana | Banana |
-| Queso | Cheese |
-| Pan | Bread |
-| Papas fritas | French fries |
-| Sopa | Soup |
-| Agua | Water |
-| Pastel / Torta | Cake |
+- [x] Invite-only signup, redemption, per-member invite allowance
+- [x] Listings — create, edit, draft/publish, photos, soft delete
+- [x] Browse — full-text search, category and price filters
+- [x] Offers — make, withdraw, accept, decline, pay at the accepted price
+- [x] Checkout — Stripe hosted, address collection, platform fee
+- [x] Orders — purchases, sales, tracking, delivery confirmation
+- [x] Seller payouts — Stripe Connect Express onboarding + dashboard
+- [x] RLS on every table, with money columns server-owned
 
-## ⚽ Categoría 3: Acciones y Deportes (Actions & Sports)
+Not built on purpose (see the end of `PLAN.md` for why): buyer↔seller messaging,
+timed auctions, in-app refunds, ratings, shipping labels, escrow.
 
-*Charades style — acting these out is required!*
+Known gaps:
 
-| Español | English |
-|---|---|
-| Nadar | To swim |
-| Bailar | To dance |
-| Cantar | To sing |
-| Correr | To run |
-| Dormir | To sleep |
-| Fútbol | Soccer |
-| Cocinar | To cook |
-| Manejar / Conducir | To drive |
-| Tocar la guitarra | To play guitar |
-| Pintar | To paint |
-| Patinar | To skate |
-| Tomar una foto | To take a photo |
-| Cepillarse los dientes | To brush teeth |
-
-## 🏠 Categoría 4: Objetos de la Casa (Household Objects)
-
-*Everyday things everyone can easily describe.*
-
-| Español | English |
-|---|---|
-| Teléfono / Celular | Phone |
-| Cama | Bed |
-| Cuchara | Spoon |
-| Reloj | Clock / Watch |
-| Zapatos | Shoes |
-| Espejo | Mirror |
-| Silla | Chair |
-| Televisor | TV |
-| Llaves | Keys |
-| Ventana | Window |
-| Almohada | Pillow |
-| Computadora | Computer |
-
-## 🌟 Categoría 5: Personajes Famosos (Famous Characters)
-
-*Pop culture icons everyone knows globally.*
-
-- Mickey Mouse
-- Batman
-- Elsa (Frozen)
-- Harry Potter
-- El Hombre Araña / Spider-Man
-- Mario Bros
-- Bob Esponja (SpongeBob)
-- Shrek
-- Barbie
-- Pikachu
-- Santa Claus / Papá Noel
+- [ ] **The fee percentage lives in two places** — `MARKETPLACE_FEE_BPS` (real)
+      and `FEE_BPS` in `src/pages/SellPage.tsx` (the seller's estimate). Change
+      both together.
+- [ ] **No admin UI.** Suspending a member or topping up invites is a SQL update;
+      the `is_admin` flag and policies exist, the screens do not.
+- [ ] **Offers never expire on their own.** The `expired` status exists but
+      nothing sets it — it needs a scheduled job.
+- [ ] **Quantity is decremented by the webhook only.** Two buyers can both reach
+      checkout for the last item; the second one's payment succeeds and
+      oversells. Fine at small scale, needs a reservation hold before it isn't.

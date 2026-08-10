@@ -1,0 +1,3 @@
+# Single-page app: every route is served by index.html and resolved by
+# React Router. Without this, a hard refresh on /listing/abc 404s.
+/*  /index.html  200
