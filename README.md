@@ -133,6 +133,9 @@ as StreetRise. They are not run by the deploy pipeline.
 | `007_offer_expiry.sql` | Offer deadlines, enforced at use and swept in the background |
 | `008_moderation_and_safety.sql` | Reports, suspension with teeth, admin actions + audit log |
 | `009_fix_trusted_writes.sql` | Lets the trusted RPCs write the columns they own — see below |
+| `010_lock_internal_functions.sql` | Stops PostgREST exposing the internal helpers as public RPCs |
+
+All ten are **applied** to the live project (`kktiqfvxoljvnxmrclyq`).
 
 ### Testing them before they touch anything
 
@@ -152,6 +155,18 @@ here, not to hold against a real JWT. But it earned its keep immediately:
 SECURITY DEFINER functions meant to be the only way those columns change,
 because `SECURITY DEFINER` changes the executing role but not `auth.uid()`.
 Migration 009 fixes it and repairs any rows the bug stranded.
+
+Supabase's own security advisor then caught a fourth, which the local harness
+structurally could not: PostgREST publishes every `public` function as an RPC,
+and Postgres grants EXECUTE to PUBLIC by default — so helpers written to be
+called by other functions were also a public API. Any signed-in member could
+have called `release_listing_stock` to inflate anyone's inventory, or
+`log_admin_action` to forge the append-only audit log. Migration 010 revokes
+those grants and hands them back to `service_role` alone.
+
+**Run `get_advisors` after any schema change.** The lesson generalises: a
+local harness proves logic, an advisor against the real platform proves
+exposure, and neither substitutes for the other.
 
 ## Status
 

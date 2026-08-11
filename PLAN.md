@@ -26,7 +26,29 @@ deliberate: it keeps you out of PCI compliance entirely.
 
 ---
 
-## Step 1 — Supabase project (20 min)
+## Step 1 — Supabase project ✅ DONE
+
+The project is created and all ten migrations are applied and verified.
+
+| | |
+|---|---|
+| Project | **Beengo** — `kktiqfvxoljvnxmrclyq`, us-east-1 |
+| URL | `https://kktiqfvxoljvnxmrclyq.supabase.co` |
+| Cost | $0/month |
+| State | 12 tables, 35 functions, 32 policies, 12 categories, RLS on every table |
+| Sweepers | `pg_cron` enabled; both jobs scheduled |
+
+Verified against the live database as the real `authenticated` role: a
+signed-in non-member reads zero listings, and the internal helpers are not
+callable over the API.
+
+Get your anon key from **Project Settings → API** and put both values in
+`.env.local` (Step 2).
+
+<details>
+<summary>The original instructions, if you ever need to rebuild from scratch</summary>
+
+### Step 1 (original) — Supabase project (20 min)
 
 1. Sign up at [supabase.com](https://supabase.com) → **New project**.
    - Name: `beengo`
@@ -66,6 +88,10 @@ deliberate: it keeps you out of PCI compliance entirely.
 **Check it worked:** Table Editor should show `profiles`, `listings`, `orders`,
 `invites`, `offers`, `reports`, `platform_settings`, `terms_acceptances`;
 `categories` should have 12 rows and `platform_settings` exactly 1.
+
+---
+
+</details>
 
 ---
 
