@@ -132,6 +132,26 @@ as StreetRise. They are not run by the deploy pipeline.
 | `006_inventory_reservation.sql` | Stock held at checkout instead of after payment |
 | `007_offer_expiry.sql` | Offer deadlines, enforced at use and swept in the background |
 | `008_moderation_and_safety.sql` | Reports, suspension with teeth, admin actions + audit log |
+| `009_fix_trusted_writes.sql` | Lets the trusted RPCs write the columns they own — see below |
+
+### Testing them before they touch anything
+
+```bash
+sudo ./supabase/tests/run.sh
+```
+
+Applies every migration to a scratch local Postgres (Supabase's `auth` and
+`storage` objects are stubbed) and exercises the flows that would cost real
+money if they were wrong: the oversell race, invite accounting, offer
+deadlines, privilege escalation, and money-column tampering.
+
+It is not a substitute for testing on Supabase — RLS is only proved to parse
+here, not to hold against a real JWT. But it earned its keep immediately:
+**it caught three shipped bugs**, one of which meant nobody could join at all.
+`protect_profile_columns()` was reverting the writes made by the very
+SECURITY DEFINER functions meant to be the only way those columns change,
+because `SECURITY DEFINER` changes the executing role but not `auth.uid()`.
+Migration 009 fixes it and repairs any rows the bug stranded.
 
 ## Status
 

@@ -47,6 +47,8 @@ deliberate: it keeps you out of PCI compliance entirely.
    - `006_inventory_reservation.sql` — stock held at checkout
    - `007_offer_expiry.sql` — offer deadlines
    - `008_moderation_and_safety.sql` — reports, suspensions, admin actions
+   - `009_fix_trusted_writes.sql` — **required**, not optional: without it
+     redeem_invite cannot activate anyone and nobody can join
 
    Each should say "Success. No rows returned." If one errors, stop and fix it
    before running the next — they build on each other.
