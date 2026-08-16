@@ -113,7 +113,8 @@ src/
 └── types/index.ts    # Shared types (hand-written, not generated)
 
 supabase/
-├── migrations/       # 001–004, run BY HAND in the SQL editor, in order
+├── migrations/       # 001–010, applied in numeric order
+├── tests/            # run.sh — apply + smoke-test against local Postgres
 └── functions/        # connect-onboarding, create-checkout, stripe-webhook
 ```
 
