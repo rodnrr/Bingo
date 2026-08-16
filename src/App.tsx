@@ -33,6 +33,15 @@ const AuthCallbackPage  = lazy(() => import('@/pages/AuthCallbackPage'))
 const NotFoundPage      = lazy(() => import('@/pages/NotFoundPage'))
 const AdminPage         = lazy(() => import('@/pages/admin/AdminPage'))
 
+// Design preview, dev-only. The ternary is what keeps it out of the
+// production bundle: import.meta.env.DEV is replaced with `false` at
+// build time, so Rollup drops the dynamic import entirely rather than
+// emitting a chunk nobody can route to. Guarding only the <Route> is
+// not enough — the import expression alone keeps the chunk alive.
+const PreviewPage = import.meta.env.DEV
+  ? lazy(() => import('@/pages/PreviewPage'))
+  : null
+
 /** Signed in, invited, and agreed to the current terms. */
 const gated = (element: React.ReactNode) => <RequireMember>{element}</RequireMember>
 
@@ -79,6 +88,10 @@ export default function App() {
           <Route path="/account"         element={gatedNoTerms(<AccountPage />)} />
           <Route path="/orders/return"   element={gated(<CheckoutReturnPage />)} />
           <Route path="/admin"           element={gated(<AdminPage />)} />
+
+          {PreviewPage && (
+            <Route path="/preview" element={<PreviewPage />} />
+          )}
 
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*"    element={<Navigate to="/404" replace />} />

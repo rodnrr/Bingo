@@ -208,3 +208,18 @@ Known gaps:
       Suspend instead, or delete the orders first if you genuinely mean to.
 - [ ] **Report handling has no appeals path.** An actioned report is final and
       the member is not notified. Fine at small scale, not fine at large.
+
+## Looking at the design without a database
+
+```bash
+npm run dev
+# → http://localhost:5173/preview
+```
+
+`/preview` mounts the real components with invented data, so the screens behind
+the invite gate — the browse grid, listing detail, the seller's fee breakdown,
+the admin console — can be worked on offline. It exists only in development:
+`import.meta.env.DEV` is folded to `false` at build time, so Rollup drops the
+import and no chunk reaches production. (Guarding only the `<Route>` is not
+enough — the import expression alone keeps the chunk alive. Verified by
+grepping `dist/`.)
