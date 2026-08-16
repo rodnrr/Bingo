@@ -78,11 +78,11 @@ export default function SalesPage() {
                   <div className="min-w-0">
                     <Link
                       to={`/listing/${order.listing_id}`}
-                      className="font-medium hover:text-primary-600"
+                      className="font-medium hover:text-primary"
                     >
                       {order.listing?.title ?? 'Listing'}
                     </Link>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-fg-subtle">
                       to {order.buyer?.display_name ?? 'a member'} · {timeAgo(order.created_at)}
                     </p>
                   </div>
@@ -90,7 +90,7 @@ export default function SalesPage() {
                     <p className="font-bold">
                       {money(order.total_cents - order.fee_cents, order.currency)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-fg-subtle">
                       after {money(order.fee_cents, order.currency)} fee
                     </p>
                     <span className="badge-neutral">{ORDER_STATUS_LABELS[order.status]}</span>
@@ -98,8 +98,8 @@ export default function SalesPage() {
                 </div>
 
                 {lines.length > 0 && (
-                  <div className="rounded-xl bg-gray-50 px-3 py-2 text-sm dark:bg-slate-700/50">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <div className="rounded-xl bg-panel2 px-3 py-2 text-sm ">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                       Ship to
                     </p>
                     {lines.map((line) => <p key={line}>{line}</p>)}
@@ -128,7 +128,7 @@ export default function SalesPage() {
                 )}
 
                 {order.tracking_number && (
-                  <p className="text-sm text-gray-600 dark:text-slate-400">
+                  <p className="text-sm text-fg-muted">
                     Tracking: {order.tracking_carrier ?? ''} <strong>{order.tracking_number}</strong>
                   </p>
                 )}

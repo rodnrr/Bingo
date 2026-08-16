@@ -72,7 +72,7 @@ export default function PhotoUploader({ userId, listingId, photos, onChange }: P
     <div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {photos.map((photo, i) => (
-          <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-xl bg-gray-100">
+          <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-xl bg-panel2">
             <img src={photo.url} alt="" className="h-full w-full object-cover" />
             {i === 0 && (
               <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
@@ -95,7 +95,7 @@ export default function PhotoUploader({ userId, listingId, photos, onChange }: P
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition-colors hover:border-primary-600 hover:text-primary-600 disabled:opacity-50 dark:border-slate-600"
+            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line/10 text-fg-subtle transition-colors hover:border-primary hover:text-primary disabled:opacity-50 "
           >
             {busy ? <Spinner className="h-5 w-5" /> : <ImagePlus className="h-6 w-6" />}
             <span className="text-xs">{busy ? 'Uploading' : 'Add'}</span>

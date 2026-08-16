@@ -53,7 +53,7 @@ export default function LoginPage() {
     <Container className="max-w-md">
       <Card>
         <h1 className="text-2xl font-bold">Sign in</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-muted">
           Welcome back to Been-go!
         </p>
 
@@ -92,10 +92,10 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-4 flex items-center justify-between text-sm">
-          <button onClick={handleReset} className="text-primary-600 hover:underline">
+          <button onClick={handleReset} className="text-primary hover:underline">
             Forgot password
           </button>
-          <Link to="/signup" className="text-primary-600 hover:underline">
+          <Link to="/signup" className="text-primary hover:underline">
             Have an invite code?
           </Link>
         </div>

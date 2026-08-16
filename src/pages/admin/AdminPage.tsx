@@ -16,8 +16,8 @@ type Tab = typeof TABS[number]
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <Card className="!p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-      <p className={clsx('mt-1 text-2xl font-bold', tone)}>{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-fg-subtle">{label}</p>
+      <p className={clsx('num mt-1 text-2xl font-medium', tone)}>{value}</p>
     </Card>
   )
 }
@@ -40,17 +40,17 @@ function Overview() {
       <Stat
         label="Suspended"
         value={String(data.members_suspended)}
-        tone={data.members_suspended > 0 ? 'text-danger-600' : undefined}
+        tone={data.members_suspended > 0 ? 'text-danger' : undefined}
       />
       <Stat
         label="Open reports"
         value={String(data.reports_open)}
-        tone={data.reports_open > 0 ? 'text-warning-600' : undefined}
+        tone={data.reports_open > 0 ? 'text-warning' : undefined}
       />
       <Stat label="Live listings"   value={String(data.listings_active)} />
       <Stat label="Paid orders"     value={String(data.orders_paid)} />
       <Stat label="Total sold"      value={money(data.gmv_cents)} />
-      <Stat label="Your fees"       value={money(data.fees_cents)} tone="text-success-600" />
+      <Stat label="Your fees"       value={money(data.fees_cents)} tone="text-success" />
     </div>
   )
 }
@@ -77,10 +77,10 @@ export default function AdminPage() {
             key={t}
             onClick={() => setTab(t)}
             className={clsx(
-              'rounded-full px-4 py-2 text-sm font-medium transition-colors',
+              'rounded px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors',
               t === tab
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-800 dark:text-slate-300',
+                ? 'bg-primary text-primary-fg'
+                : 'bg-panel2 text-fg-muted hairline hover:text-fg',
             )}
           >
             {t}

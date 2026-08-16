@@ -26,7 +26,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
         <h1 className="text-2xl font-bold">Something broke</h1>
-        <p className="max-w-md text-sm text-gray-600">
+        <p className="max-w-md text-sm text-fg-muted">
           The page hit an error it could not recover from. Reloading usually clears it. If you
           were in the middle of a purchase, check <strong>Purchases</strong> before trying again —
           the order may already exist.

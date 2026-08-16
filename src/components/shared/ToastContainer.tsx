@@ -3,9 +3,9 @@ import { X } from 'lucide-react'
 import { useToastStore } from '@/lib/store'
 
 const TONE: Record<string, string> = {
-  success: 'bg-success-600 text-white',
-  error:   'bg-danger-600 text-white',
-  info:    'bg-gray-900 text-white dark:bg-slate-700',
+  success: 'bg-success text-white',
+  error:   'bg-danger text-white',
+  info:    'bg-fg text-canvas',
 }
 
 export default function ToastContainer() {

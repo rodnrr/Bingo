@@ -2,11 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Base ── */
+/* ================================================================
+   Tokens
+
+   One set of semantic names, two palettes. Every component uses
+   bg-panel / text-fg / border-line and neither knows nor cares which
+   theme is on — which is why there is no dark: variant anywhere in the
+   component layer below.
+   ================================================================ */
+
 @layer base {
-  *, *::before, *::after {
-    box-sizing: border-box;
+  /* Light — a bright instrument panel, not a document. */
+  :root {
+    --base:       248 249 251;
+    --panel:      255 255 255;
+    --panel2:     241 243 247;
+    --line:        15  23  42;
+    --fg:          12  16  26;
+    --fg-muted:    88  96 114;
+    --fg-subtle:  128 136 154;
+    --primary:    234  88  12;
+    --primary-fg: 255 255 255;
+    --accent:       8 145 178;
+
+    --line-alpha: 0.10;
+    --grid-alpha: 0.045;
   }
+
+  /* Dark — the intended default. */
+  .dark {
+    --base:         8   9  13;
+    --panel:       16  18  25;
+    --panel2:      23  26  35;
+    --line:       255 255 255;
+    --fg:         232 235 243;
+    --fg-muted:   154 162 181;
+    --fg-subtle:  116 124 143;
+    --primary:    255 138  61;
+    --primary-fg:  22  11   3;
+    --accent:      34 211 238;
+
+    --line-alpha: 0.09;
+    --grid-alpha: 0.035;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
 
   html {
     -webkit-text-size-adjust: 100%;
@@ -14,91 +54,214 @@
   }
 
   body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased dark:bg-slate-900 dark:text-slate-100;
+    @apply bg-canvas text-fg font-sans antialiased;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+    /* The faint engineering grid. Two hairline gradients, fixed, so the
+       page moves over it rather than dragging it along. */
+    background-image:
+      linear-gradient(rgb(var(--line) / var(--grid-alpha)) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--line) / var(--grid-alpha)) 1px, transparent 1px);
+    background-size: 64px 64px, 64px 64px;
+    background-attachment: fixed;
   }
 
-  a, button {
-    -webkit-tap-highlight-color: transparent;
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
   }
+
+  a, button { -webkit-tap-highlight-color: transparent; }
 
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-primary-600;
+    @apply outline-none ring-2 ring-primary/70 ring-offset-2;
+    --tw-ring-offset-color: rgb(var(--base));
+  }
+
+  ::selection {
+    background: rgb(var(--primary) / 0.28);
+  }
+
+  /* Money and codes are data. Everything numeric gets the mono face and
+     tabular figures so columns line up and digits stop shifting width. */
+  .num {
+    @apply font-mono tabular-nums tracking-tight;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
   }
 }
 
-/* ── Component layer ── */
+/* ================================================================
+   Components
+   ================================================================ */
+
 @layer components {
+
+  /* ── Surfaces ── */
+
   .card {
-    @apply bg-white rounded-2xl shadow-card p-4 dark:bg-slate-800;
-  }
-  .card-hover {
-    @apply card transition-shadow duration-200 hover:shadow-card-hover;
+    @apply relative rounded-lg bg-panel p-4 shadow-panel;
+    border: 1px solid rgb(var(--line) / var(--line-alpha));
   }
 
+  .card-hover {
+    @apply card transition-[transform,box-shadow,border-color] duration-150;
+  }
+  .card-hover:hover {
+    @apply -translate-y-0.5 shadow-lift;
+    border-color: rgb(var(--primary) / 0.35);
+  }
+
+  /* A panel with HUD corner ticks. Reserved for the few places that
+     should feel like the primary instrument — not sprinkled about. */
+  .hud { @apply relative; }
+  .hud::before,
+  .hud::after {
+    content: '';
+    @apply pointer-events-none absolute h-3 w-3;
+    border-color: rgb(var(--primary) / 0.55);
+  }
+  .hud::before {
+    @apply left-[-1px] top-[-1px] border-l border-t;
+  }
+  .hud::after {
+    @apply bottom-[-1px] right-[-1px] border-b border-r;
+  }
+
+  /* ── Buttons ── */
+
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold
-           transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary-600
-           focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           select-none active:scale-95;
+    @apply inline-flex select-none items-center justify-center gap-2 rounded
+           font-medium tracking-tight transition-all duration-150
+           disabled:cursor-not-allowed disabled:opacity-40;
   }
+
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 px-5 py-2.5;
+    @apply btn bg-primary px-5 py-2.5 text-primary-fg shadow-glow-sm;
   }
+  .btn-primary:hover:not(:disabled) {
+    @apply shadow-glow brightness-110;
+  }
+  .btn-primary:active:not(:disabled) { @apply scale-[0.98]; }
+
   .btn-secondary {
-    @apply btn bg-gray-100 text-gray-900 hover:bg-gray-200 px-5 py-2.5
-           dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600;
+    @apply btn bg-panel2 px-5 py-2.5 text-fg;
+    border: 1px solid rgb(var(--line) / var(--line-alpha));
   }
+  .btn-secondary:hover:not(:disabled) {
+    border-color: rgb(var(--primary) / 0.45);
+    @apply text-primary;
+  }
+  .btn-secondary:active:not(:disabled) { @apply scale-[0.98]; }
+
   .btn-ghost {
-    @apply btn text-gray-700 hover:bg-gray-100 px-4 py-2
-           dark:text-slate-300 dark:hover:bg-slate-800;
+    @apply btn px-4 py-2 text-fg-muted;
   }
+  .btn-ghost:hover:not(:disabled) { @apply bg-panel2 text-fg; }
+
   .btn-danger {
-    @apply btn bg-danger-500 text-white hover:bg-danger-600 px-5 py-2.5;
+    @apply btn bg-danger px-5 py-2.5 text-white;
   }
+  .btn-danger:hover:not(:disabled) { @apply brightness-110; }
+
   .btn-sm { @apply px-3 py-1.5 text-sm; }
   .btn-lg { @apply px-7 py-3.5 text-base; }
 
+  /* ── Form controls ── */
+
   .input {
-    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm
-           placeholder:text-gray-400 focus:border-primary-600 focus:ring-2
-           focus:ring-primary-600/20 focus:outline-none transition-colors
-           dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100
-           dark:placeholder:text-slate-500;
+    @apply w-full rounded bg-panel2 px-3.5 py-2.5 text-sm text-fg
+           transition-colors duration-150 placeholder:text-fg-subtle
+           focus:outline-none;
+    border: 1px solid rgb(var(--line) / var(--line-alpha));
   }
+  .input:focus {
+    border-color: rgb(var(--primary) / 0.6);
+    box-shadow: 0 0 0 3px rgb(var(--primary) / 0.14);
+  }
+
+  select.input {
+    /* Native arrow, tinted to the theme rather than left as OS chrome. */
+    @apply appearance-none bg-no-repeat pr-9;
+    background-image: linear-gradient(45deg, transparent 50%, rgb(var(--fg-muted)) 50%),
+                      linear-gradient(135deg, rgb(var(--fg-muted)) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%;
+    background-size: 5px 5px, 5px 5px;
+  }
+
+  /* The wide-tracked micro caps that make a UI read as instrumentation. */
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-slate-300;
+    @apply mb-1.5 block font-mono text-[10px] uppercase tracking-micro text-fg-subtle;
   }
-  .hint {
-    @apply text-xs text-gray-500 mt-1 dark:text-slate-400;
-  }
-  .error-text {
-    @apply text-xs text-danger-600 mt-1;
-  }
+
+  .hint       { @apply mt-1.5 text-xs text-fg-subtle; }
+  .error-text { @apply mt-1.5 text-xs text-danger; }
+
+  /* ── Badges ── */
 
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5
+           font-mono text-[10px] uppercase tracking-micro;
+    border: 1px solid currentColor;
   }
-  .badge-neutral { @apply badge bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200; }
-  .badge-success { @apply badge bg-success-50 text-success-600; }
-  .badge-warning { @apply badge bg-warning-50 text-warning-600; }
-  .badge-danger  { @apply badge bg-danger-50 text-danger-600; }
-  .badge-primary { @apply badge bg-primary-50 text-primary-700; }
+  .badge-neutral { @apply badge text-fg-subtle; }
+  .badge-primary { @apply badge text-primary; }
+  .badge-success { @apply badge text-success; }
+  .badge-warning { @apply badge text-warning; }
+  .badge-danger  { @apply badge text-danger; }
+
+  /* ── Section eyebrow ── */
+
+  .eyebrow {
+    @apply flex items-center gap-2 font-mono text-[10px] uppercase
+           tracking-micro text-fg-subtle;
+  }
+  .eyebrow::after {
+    content: '';
+    @apply h-px flex-1;
+    background: linear-gradient(to right, rgb(var(--line) / 0.18), transparent);
+  }
+
+  /* ── Nav ── */
+
+  .nav-link {
+    @apply relative flex items-center gap-1.5 rounded px-3 py-2 text-sm
+           font-medium text-fg-muted transition-colors duration-150;
+  }
+  .nav-link:hover { @apply bg-panel2 text-fg; }
+
+  .nav-link-active {
+    @apply text-fg;
+    background: rgb(var(--primary) / 0.10);
+  }
+  /* The lit underline that marks where you are. */
+  .nav-link-active::after {
+    content: '';
+    @apply absolute inset-x-2 bottom-0 h-px;
+    background: rgb(var(--primary));
+    box-shadow: 0 0 8px 0 rgb(var(--primary) / 0.9);
+  }
 }
 
-/* Clamp a description to N lines without a plugin. */
 @layer utilities {
   .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
   }
   .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .hairline { border: 1px solid rgb(var(--line) / var(--line-alpha)); }
+  .hairline-t { border-top: 1px solid rgb(var(--line) / var(--line-alpha)); }
+  .hairline-b { border-bottom: 1px solid rgb(var(--line) / var(--line-alpha)); }
+}
+
+/* Motion is decoration; some people get sick from it. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

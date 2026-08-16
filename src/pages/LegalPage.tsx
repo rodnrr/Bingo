@@ -37,10 +37,10 @@ export default function LegalPage() {
             to={`/legal/${key}`}
             className={({ isActive }) =>
               clsx(
-                'rounded-full px-4 py-2 text-sm font-medium transition-colors',
+                'rounded px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors',
                 isActive
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-800 dark:text-slate-300',
+                  ? 'bg-primary text-primary-fg'
+                  : 'bg-panel2 text-fg-muted hairline hover:text-fg',
               )
             }
           >

@@ -70,8 +70,8 @@ const FEE_BPS = 800
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <Card className="!p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${tone ?? ''}`}>{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-fg-subtle">{label}</p>
+      <p className={`num mt-1 text-2xl font-medium ${tone ?? ""}`}>{value}</p>
     </Card>
   )
 }
@@ -86,7 +86,7 @@ export default function PreviewPage() {
 
   return (
     <Container>
-      <div className="mb-6 rounded-xl border border-warning-500/40 bg-warning-50 px-4 py-3 text-sm text-gray-800">
+      <div className="mb-6 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-fg">
         <strong>Design preview — everything on this page is fake.</strong> These are the real
         components with invented data, so the screens behind the invite gate can be worked on
         without a database. This route exists only in development.
@@ -104,8 +104,8 @@ export default function PreviewPage() {
           <button
             key={c}
             className={
-              'rounded-full px-3 py-1.5 text-sm font-medium ' +
-              (i === 0 ? 'bg-primary-600 text-white' : 'bg-white text-gray-700 dark:bg-slate-800 dark:text-slate-300')
+              'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide ' +
+              (i === 0 ? 'bg-primary text-primary-fg' : 'bg-panel2 text-fg-muted hairline')
             }
           >
             {c}
@@ -118,19 +118,19 @@ export default function PreviewPage() {
       </div>
 
       {/* ── Listing detail ── */}
-      <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-gray-500">
+      <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-fg-subtle">
         Listing detail
       </h2>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-slate-800">
+        <div className="aspect-square w-full overflow-hidden rounded-2xl bg-panel2 ">
           <img src={hero.photos![0].url} alt="" className="h-full w-full object-contain" />
         </div>
 
         <div className="space-y-5">
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">{hero.title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-fg-subtle">
               <span className="badge-neutral">{CONDITION_LABELS[hero.condition]}</span>
               <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> 42</span>
               <span>· listed 1 day ago</span>
@@ -138,12 +138,12 @@ export default function PreviewPage() {
           </div>
 
           <div>
-            <p className="text-3xl font-bold">{money(hero.price_cents)}</p>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600 dark:text-slate-400">
+            <p className="num text-4xl font-medium tracking-tight">{money(hero.price_cents)}</p>
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-fg-muted">
               <Truck className="h-4 w-4" />
               {money(hero.shipping_cents)} shipping — {money(hero.price_cents + hero.shipping_cents)} total
             </p>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600 dark:text-slate-400">
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-fg-muted">
               <Package className="h-4 w-4" /> Ships from Tampa, FL
             </p>
           </div>
@@ -151,7 +151,7 @@ export default function PreviewPage() {
           <Card className="space-y-3">
             <Button fullWidth size="lg">Buy it now</Button>
 
-            <form className="space-y-2 border-t border-gray-200 pt-3 dark:border-slate-700"
+            <form className="space-y-2 border-t border-line/10 pt-3 "
                   onSubmit={(e) => e.preventDefault()}>
               <label className="label" htmlFor="pv-offer">Make an offer</label>
               <div className="flex gap-2">
@@ -163,24 +163,24 @@ export default function PreviewPage() {
             </form>
           </Card>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-fg-subtle">
             Sold by <strong>{SELLER.display_name}</strong>
           </p>
         </div>
       </div>
 
       {/* ── Seller payout breakdown ── */}
-      <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-gray-500">
+      <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-fg-subtle">
         What the seller sees before publishing
       </h2>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border border-warning-500/30 bg-warning-50">
+        <Card className="border border-warning/30 bg-warning/10">
           <div className="flex gap-3">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-warning-600" />
+            <AlertTriangle className="h-5 w-5 shrink-0 text-warning" />
             <div>
-              <p className="font-semibold text-warning-600">Payouts not set up yet</p>
-              <p className="mt-1 text-sm text-gray-700">
+              <p className="font-semibold text-warning">Payouts not set up yet</p>
+              <p className="mt-1 text-sm text-fg-muted">
                 You can write and save a listing now, but buyers cannot check out until Stripe
                 has your bank details. It takes about two minutes.
               </p>
@@ -190,22 +190,22 @@ export default function PreviewPage() {
         </Card>
 
         <Card>
-          <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm dark:bg-slate-700/50">
+          <div className="rounded-xl bg-panel2 px-4 py-3 text-sm ">
             <p className="flex justify-between">
               <span>Item price</span><span>{money(priceCents)}</span>
             </p>
-            <p className="flex justify-between text-gray-600 dark:text-slate-400">
+            <p className="flex justify-between text-fg-muted">
               <span>Been-go! fee ({FEE_BPS / 100}%)</span><span>−{money(feeCents)}</span>
             </p>
-            <p className="mt-1 flex justify-between border-t border-gray-200 pt-1 font-semibold dark:border-slate-600">
+            <p className="mt-1 flex justify-between border-t border-line/10 pt-1 font-semibold ">
               <span>You receive</span><span>{money(payoutCents)}</span>
             </p>
             <p className="hint">Shipping is passed through in full — no fee on postage.</p>
           </div>
 
           <div className="mt-4 flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-success-600" />
-            <p className="text-sm text-gray-600 dark:text-slate-400">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
+            <p className="text-sm text-fg-muted">
               That percentage is read from the same row checkout charges against, so the
               estimate and the deduction cannot drift apart.
             </p>
@@ -214,7 +214,7 @@ export default function PreviewPage() {
       </div>
 
       {/* ── Admin ── */}
-      <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-gray-500">
+      <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-fg-subtle">
         Admin console
       </h2>
 
@@ -223,8 +223,8 @@ export default function PreviewPage() {
           <button
             key={t}
             className={
-              'rounded-full px-4 py-2 text-sm font-medium ' +
-              (i === 0 ? 'bg-primary-600 text-white' : 'bg-white text-gray-700 dark:bg-slate-800 dark:text-slate-300')
+              'rounded px-4 py-2 text-xs font-medium uppercase tracking-wide ' +
+              (i === 0 ? 'bg-primary text-primary-fg' : 'bg-panel2 text-fg-muted hairline')
             }
           >
             {t}
@@ -235,12 +235,12 @@ export default function PreviewPage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Active members"  value="128" />
         <Stat label="Awaiting invite" value="6" />
-        <Stat label="Suspended"       value="2"  tone="text-danger-600" />
-        <Stat label="Open reports"    value="3"  tone="text-warning-600" />
+        <Stat label="Suspended"       value="2"  tone="text-danger" />
+        <Stat label="Open reports"    value="3"  tone="text-warning" />
         <Stat label="Live listings"   value="341" />
         <Stat label="Paid orders"     value="87" />
         <Stat label="Total sold"      value={money(1284300)} />
-        <Stat label="Your fees"       value={money(102744)} tone="text-success-600" />
+        <Stat label="Your fees"       value={money(102744)} tone="text-success" />
       </div>
 
       <div className="mt-14" />

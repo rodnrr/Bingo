@@ -210,6 +210,35 @@ Known gaps:
 - [ ] **Report handling has no appeals path.** An actioned report is final and
       the member is not notified. Fine at small scale, not fine at large.
 
+## Design — "amber terminal"
+
+Dark-first, near-black surfaces separated by hairlines rather than shadows, one
+luminous accent, and every number set in a monospace face. Amber rather than the
+cyan/violet this genre usually reaches for: it keeps the brand orange, and it is
+the road less travelled, which is most of what makes it distinctive.
+
+| | |
+|---|---|
+| Display | Space Grotesk — squared counters, technical without costume |
+| Body | Inter |
+| Numerals | JetBrains Mono, tabular figures, via the `.num` class |
+| Radii | 4–8px. `rounded-2xl` is friendly; this is not that |
+| Depth | A lit top edge and a soft floor, never a blur halo |
+| Motion | 150ms, and fully disabled under `prefers-reduced-motion` |
+
+Colour lives in **semantic tokens** — `bg-canvas`, `bg-panel`, `text-fg`,
+`text-fg-muted`, `border-line/10` — that resolve to CSS variables swapped by the
+`.dark` class. There is no `dark:` variant anywhere in the component layer,
+because there is nothing to forget: a component styled once is styled for both
+themes. Dark is the default; the toggle is in the header and the choice is
+applied by an inline script in `index.html` *before* first paint, so no load
+flashes the wrong theme.
+
+> One trap worth knowing if you extend the palette: the page colour is keyed
+> `canvas`, not `base`. A colour named `base` also generates a `text-base`
+> utility, which collides with the core font-size one and silently paints every
+> heading the background colour. That shipped for exactly one screenshot.
+
 ## Looking at the design without a database
 
 ```bash

@@ -56,11 +56,11 @@ export default function MyListingsPage() {
             const photo = listing.photos?.[0]
             return (
               <Card key={listing.id} className="flex items-center gap-4 !p-3">
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-700">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-panel2">
                   {photo ? (
                     <img src={photo.url} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-gray-400">
+                    <div className="flex h-full w-full items-center justify-center text-fg-subtle">
                       <ImageOff className="h-5 w-5" />
                     </div>
                   )}
@@ -69,11 +69,11 @@ export default function MyListingsPage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     to={`/listing/${listing.id}`}
-                    className="line-clamp-2 font-medium hover:text-primary-600"
+                    className="line-clamp-2 font-medium hover:text-primary"
                   >
                     {listing.title}
                   </Link>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-fg-subtle">
                     <span className={clsx(STATUS_CLASS[listing.status])}>{listing.status}</span>
                     <span>{money(listing.price_cents, listing.currency)}</span>
                     <span>· qty {listing.quantity}</span>

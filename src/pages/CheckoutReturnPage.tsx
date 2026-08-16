@@ -51,18 +51,18 @@ export default function CheckoutReturnPage() {
       <Card className="text-center">
         {settled ? (
           <>
-            <CheckCircle2 className="mx-auto h-12 w-12 text-success-600" />
+            <CheckCircle2 className="mx-auto h-12 w-12 text-success" />
             <h1 className="mt-3 text-2xl font-bold">Order confirmed</h1>
-            <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+            <p className="mt-1 text-sm text-fg-muted">
               You paid {money(order.total_cents, order.currency)}. The seller has your shipping
               address and will send it out.
             </p>
           </>
         ) : (
           <>
-            <Clock className="mx-auto h-12 w-12 text-warning-600" />
+            <Clock className="mx-auto h-12 w-12 text-warning" />
             <h1 className="mt-3 text-2xl font-bold">Payment received</h1>
-            <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+            <p className="mt-1 text-sm text-fg-muted">
               Stripe has your payment and we are finishing the order. This usually takes a few
               seconds — it will appear under Purchases either way. Nothing else is needed from you.
             </p>

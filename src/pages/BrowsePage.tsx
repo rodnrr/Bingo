@@ -58,7 +58,7 @@ export default function BrowsePage() {
         onSubmit={(e) => { e.preventDefault(); setParam('q', draft.trim()) }}
       >
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
           <input
             className="input pl-9"
             placeholder="Search listings…"
@@ -74,10 +74,10 @@ export default function BrowsePage() {
         <button
           onClick={() => setParam('category', '')}
           className={clsx(
-            'rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+            'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors',
             !category
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-800 dark:text-slate-300',
+              ? 'bg-primary text-primary-fg'
+              : 'bg-panel2 text-fg-muted hairline hover:text-fg',
           )}
         >
           All
@@ -88,10 +88,10 @@ export default function BrowsePage() {
             key={c.slug}
             onClick={() => setParam('category', c.slug === category ? '' : c.slug)}
             className={clsx(
-              'rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+              'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors',
               c.slug === category
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-800 dark:text-slate-300',
+                ? 'bg-primary text-primary-fg'
+                : 'bg-panel2 text-fg-muted hairline hover:text-fg',
             )}
           >
             {c.name}
@@ -101,7 +101,7 @@ export default function BrowsePage() {
         {hasFilters && (
           <button
             onClick={() => setParams(new URLSearchParams(), { replace: true })}
-            className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900"
+            className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-fg-subtle hover:text-fg"
           >
             <X className="h-3.5 w-3.5" /> Clear
           </button>

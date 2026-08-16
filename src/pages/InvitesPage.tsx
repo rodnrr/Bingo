@@ -109,7 +109,7 @@ export default function InvitesPage() {
           </Button>
 
           {remaining <= 0 && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-fg-subtle">
               You are out of invites. An admin can top you up.
             </p>
           )}
@@ -128,11 +128,11 @@ export default function InvitesPage() {
             const state = inviteState(invite)
             return (
               <Card key={invite.id} className="flex flex-wrap items-center gap-3 !p-3">
-                <code className="rounded-lg bg-gray-100 px-3 py-1.5 font-mono text-sm tracking-widest dark:bg-slate-700">
+                <code className="rounded-lg bg-panel2 px-3 py-1.5 font-mono text-sm tracking-widest ">
                   {invite.code}
                 </code>
 
-                <div className="min-w-0 flex-1 text-xs text-gray-500">
+                <div className="min-w-0 flex-1 text-xs text-fg-subtle">
                   <p>
                     {invite.email || invite.note || 'No label'} · created {timeAgo(invite.created_at)}
                   </p>
@@ -155,7 +155,7 @@ export default function InvitesPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-danger-600"
+                      className="text-danger"
                       disabled={revoke.isPending}
                       onClick={() => revoke.mutate(invite.id)}
                     >

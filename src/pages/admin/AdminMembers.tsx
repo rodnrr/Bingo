@@ -50,7 +50,7 @@ export default function AdminMembers() {
         onSubmit={(e) => { e.preventDefault(); setSearch(draft) }}
       >
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
           <input
             className="input pl-9"
             placeholder="Search by display name…"
@@ -80,7 +80,7 @@ export default function AdminMembers() {
                     {member.is_admin && <span className="badge-primary ml-2">admin</span>}
                     {isSelf && <span className="badge-neutral ml-2">you</span>}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-fg-subtle">
                     joined {timeAgo(member.created_at)} · {member.invites_remaining} invites left
                     {member.stripe_charges_enabled && ' · payouts active'}
                   </p>
@@ -122,7 +122,7 @@ export default function AdminMembers() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-danger-600"
+                      className="text-danger"
                       disabled={setStatus.isPending}
                       onClick={() => {
                         const reason = prompt('Why are you suspending this member?')
@@ -140,7 +140,7 @@ export default function AdminMembers() {
         </div>
       )}
 
-      <p className="mt-4 text-xs text-gray-500">
+      <p className="mt-4 text-xs text-fg-subtle">
         Suspending a member hides all their listings immediately and blocks new checkouts
         against them. Orders they have already been paid for stay their responsibility.
       </p>

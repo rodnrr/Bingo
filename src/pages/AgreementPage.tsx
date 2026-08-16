@@ -64,15 +64,15 @@ export default function AgreementPage() {
     <Container className="max-w-3xl">
       <Card className="mb-4">
         <div className="flex items-start gap-3">
-          <ScrollText className="h-6 w-6 shrink-0 text-primary-600" />
+          <ScrollText className="h-6 w-6 shrink-0 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Before you buy or sell</h1>
-            <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+            <p className="mt-1 text-sm text-fg-muted">
               Read these and agree once. We record which version you agreed to and when.
               If they change materially, we will ask again.
             </p>
             {termsVersion && (
-              <p className="mt-1 text-xs text-gray-500">Version {termsVersion}</p>
+              <p className="mt-1 text-xs text-fg-subtle">Version {termsVersion}</p>
             )}
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function AgreementPage() {
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-line/10 text-primary"
             checked={checkedAge}
             onChange={(e) => setCheckedAge(e.target.checked)}
           />
@@ -102,17 +102,17 @@ export default function AgreementPage() {
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-line/10 text-primary"
             checked={checkedTerms}
             onChange={(e) => setCheckedTerms(e.target.checked)}
           />
           <span>
             I have read and agree to the{' '}
-            <Link to="/legal/terms" target="_blank" className="text-primary-600 underline">
+            <Link to="/legal/terms" target="_blank" className="text-primary underline">
               Terms of Service
             </Link>{' '}
             and the{' '}
-            <Link to="/legal/privacy" target="_blank" className="text-primary-600 underline">
+            <Link to="/legal/privacy" target="_blank" className="text-primary underline">
               Privacy Policy
             </Link>
             .
@@ -122,13 +122,13 @@ export default function AgreementPage() {
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-line/10 text-primary"
             checked={checkedRules}
             onChange={(e) => setCheckedRules(e.target.checked)}
           />
           <span>
             I have read the{' '}
-            <Link to="/legal/rules" target="_blank" className="text-primary-600 underline">
+            <Link to="/legal/rules" target="_blank" className="text-primary underline">
               Community Rules
             </Link>{' '}
             — including the prohibited items list — and I will not list anything on it.
@@ -139,7 +139,7 @@ export default function AgreementPage() {
           {busy ? 'Recording…' : 'I agree'}
         </Button>
 
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs text-fg-subtle">
           You can read all of these any time from the footer. You can leave at any time —
           see section 11.
         </p>

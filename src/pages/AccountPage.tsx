@@ -56,10 +56,10 @@ export default function AccountPage() {
 
         {chargesOn && payoutsOn ? (
           <div className="mt-3 flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-success-600" />
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
             <div>
-              <p className="text-sm font-medium text-success-600">Payouts are active</p>
-              <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+              <p className="text-sm font-medium text-success">Payouts are active</p>
+              <p className="mt-1 text-sm text-fg-muted">
                 Money from your sales goes to your bank on Stripe's normal schedule, minus the
                 Been-go fee.
               </p>
@@ -76,12 +76,12 @@ export default function AccountPage() {
           </div>
         ) : (
           <div className="mt-3 flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-warning-600" />
+            <AlertTriangle className="h-5 w-5 shrink-0 text-warning" />
             <div>
-              <p className="text-sm font-medium text-warning-600">
+              <p className="text-sm font-medium text-warning">
                 {started ? 'Stripe still needs a few details' : 'Not set up yet'}
               </p>
-              <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+              <p className="mt-1 text-sm text-fg-muted">
                 Stripe collects your identity and bank details directly — Been-go never sees or
                 stores them. Until this is finished, buyers cannot check out on your listings.
               </p>
@@ -133,7 +133,7 @@ export default function AccountPage() {
 
       <Card>
         <h2 className="font-semibold">Session</h2>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-muted">
           Invites left: <strong>{profile?.invites_remaining ?? 0}</strong>
         </p>
         <Button variant="secondary" className="mt-3" onClick={() => signOut()}>

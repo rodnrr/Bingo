@@ -33,7 +33,7 @@ function inline(text: string, keyPrefix: string): ReactNode[] {
       nodes.push(<strong key={key}>{token.slice(2, -2)}</strong>)
     } else if (token.startsWith('`')) {
       nodes.push(
-        <code key={key} className="rounded bg-gray-100 px-1 py-0.5 text-[0.9em] dark:bg-slate-700">
+        <code key={key} className="rounded-sm bg-panel2 px-1.5 py-0.5 font-mono text-[0.85em] text-primary ">
           {token.slice(1, -1)}
         </code>,
       )
@@ -45,7 +45,7 @@ function inline(text: string, keyPrefix: string): ReactNode[] {
         <a
           key={key}
           href={href}
-          className="text-primary-600 underline hover:text-primary-700"
+          className="text-primary underline hover:text-primary"
           {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         >
           {label}
@@ -78,7 +78,7 @@ export default function Markdown({ source }: { source: string }) {
 
     // Horizontal rule
     if (/^---+$/.test(line.trim())) {
-      blocks.push(<hr key={key++} className="my-8 border-gray-200 dark:border-slate-700" />)
+      blocks.push(<hr key={key++} className="my-8 border-line/10" />)
       i++
       continue
     }
@@ -115,7 +115,7 @@ export default function Markdown({ source }: { source: string }) {
         <div key={key++} className="my-4 overflow-x-auto">
           <table className="w-full min-w-[24rem] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-gray-300 dark:border-slate-600">
+              <tr className="border-b border-line/10">
                 {header.map((cell, c) => (
                   <th key={c} className="px-3 py-2 text-left font-semibold">
                     {inline(cell, `th${key}-${c}`)}
@@ -125,7 +125,7 @@ export default function Markdown({ source }: { source: string }) {
             </thead>
             <tbody>
               {rows.map((row, r) => (
-                <tr key={r} className="border-b border-gray-200 dark:border-slate-700">
+                <tr key={r} className="border-b border-line/10">
                   {row.map((cell, c) => (
                     <td key={c} className="px-3 py-2 align-top">
                       {inline(cell, `td${key}-${r}-${c}`)}
@@ -150,7 +150,7 @@ export default function Markdown({ source }: { source: string }) {
       blocks.push(
         <blockquote
           key={key++}
-          className="my-4 rounded-r-xl border-l-4 border-warning-500 bg-warning-50 px-4 py-3 text-sm text-gray-800"
+          className="my-4 rounded-r-xl border-l-4 border-warning bg-warning/10 px-4 py-3 text-sm text-fg"
         >
           {quoted.filter(Boolean).map((q, n) => (
             <p key={n} className={n > 0 ? 'mt-2' : undefined}>{inline(q, `bq${key}-${n}`)}</p>
@@ -200,7 +200,7 @@ export default function Markdown({ source }: { source: string }) {
 
     if (para.length) {
       blocks.push(
-        <p key={key++} className="my-3 text-sm leading-relaxed text-gray-700 dark:text-slate-300">
+        <p key={key++} className="my-3 text-sm leading-relaxed text-fg-muted">
           {inline(para.join(' '), `p${key}`)}
         </p>,
       )

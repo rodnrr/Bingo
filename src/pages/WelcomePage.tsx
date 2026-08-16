@@ -61,7 +61,7 @@ export default function WelcomePage() {
       <Container className="max-w-md">
         <Card>
           <h1 className="text-2xl font-bold">Account suspended</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
+          <p className="mt-2 text-sm text-fg-muted">
             This account cannot use Been-go right now. If you think that is a mistake, reply to
             the person who invited you.
           </p>
@@ -74,7 +74,7 @@ export default function WelcomePage() {
     <Container className="max-w-md">
       <Card>
         <h1 className="text-2xl font-bold">One more step</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-muted">
           Been-go! is invite only. Enter the code a member sent you.
         </p>
 

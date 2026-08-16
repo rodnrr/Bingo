@@ -50,7 +50,7 @@ export default function AdminSettings() {
     <div className="max-w-2xl space-y-4">
       <Card>
         <h2 className="font-semibold">Platform fee</h2>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-muted">
           Your cut of the item price on every completed sale. Shipping is passed through
           in full and never has a fee taken from it.
         </p>
@@ -81,7 +81,7 @@ export default function AdminSettings() {
           </p>
         )}
 
-        <p className="mt-3 rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-slate-700/50 dark:text-slate-400">
+        <p className="mt-3 rounded-xl bg-panel2 px-3 py-2 text-xs text-fg-muted   ">
           This is the only place the fee is configured. The seller's estimate on the
           listing form and the amount create-checkout actually charges both read this
           value, so they cannot drift apart.
@@ -90,11 +90,11 @@ export default function AdminSettings() {
 
       <Card>
         <h2 className="font-semibold">Terms version</h2>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-muted">
           Currently <strong>{settings.terms_version}</strong>. Bumping this forces every
           member to read and accept again before they can next list, offer, or buy.
         </p>
-        <p className="mt-3 rounded-xl bg-warning-50 px-3 py-2 text-xs text-gray-700">
+        <p className="mt-3 rounded-xl bg-warning/10 px-3 py-2 text-xs text-fg-muted">
           Changing it is deliberately not a button. Edit the documents in
           <code className="mx-1">src/legal/</code>, update the version line in each, deploy,
           and only then update <code className="mx-1">platform_settings.terms_version</code>{' '}
@@ -104,22 +104,22 @@ export default function AdminSettings() {
 
       <Card>
         <h2 className="font-semibold">Recent admin actions</h2>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-muted">
           Append-only. Nothing here, including this console, can edit or delete a row.
         </p>
 
         {!actions?.length ? (
-          <p className="mt-3 text-sm text-gray-500">Nothing yet.</p>
+          <p className="mt-3 text-sm text-fg-subtle">Nothing yet.</p>
         ) : (
           <ul className="mt-3 space-y-2 text-sm">
             {actions.map((action) => (
-              <li key={action.id} className="flex flex-wrap justify-between gap-2 border-b border-gray-100 pb-2 dark:border-slate-700">
+              <li key={action.id} className="flex flex-wrap justify-between gap-2 border-b border-line/10 pb-2 ">
                 <span>
                   <strong>{action.admin?.display_name ?? 'An admin'}</strong>{' '}
                   {action.action.replace(/_/g, ' ')} on {action.target_type}
-                  {action.detail && <span className="text-gray-500"> — {action.detail}</span>}
+                  {action.detail && <span className="text-fg-subtle"> — {action.detail}</span>}
                 </span>
-                <span className="text-xs text-gray-500">{timeAgo(action.created_at)}</span>
+                <span className="text-xs text-fg-subtle">{timeAgo(action.created_at)}</span>
               </li>
             ))}
           </ul>

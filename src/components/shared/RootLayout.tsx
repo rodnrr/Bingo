@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import { useAuthStore, isMember } from '@/lib/store'
 import { signOut } from '@/lib/auth'
 import { Container } from '@/components/ui'
+import ThemeToggle from './ThemeToggle'
 import ToastContainer from './ToastContainer'
 
 const NAV = [
@@ -16,6 +17,18 @@ const NAV = [
   { to: '/purchases', label: 'Purchases', icon: ShoppingBag },
   { to: '/invites',   label: 'Invites',   icon: Mail },
 ]
+
+/** BEEN in a lit block, -GO! outside it. */
+function Wordmark() {
+  return (
+    <span className="flex items-center font-display text-lg font-bold tracking-tight">
+      <span className="rounded-sm bg-primary px-1.5 py-0.5 text-primary-fg shadow-glow-sm">
+        BEEN
+      </span>
+      <span className="pl-1 text-fg">-GO!</span>
+    </span>
+  )
+}
 
 export default function RootLayout() {
   const { profile, userId } = useAuthStore()
@@ -30,61 +43,49 @@ export default function RootLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur dark:border-slate-700 dark:bg-slate-900/90">
+      {/* The header floats over the grid: translucent, blurred, with a
+          single hairline instead of a shadow. */}
+      <header className="sticky top-0 z-40 hairline-b bg-canvas/80 backdrop-blur-xl">
         <Container className="flex h-16 items-center justify-between gap-4">
-          <Link
-            to={member ? '/browse' : '/'}
-            className="flex items-center font-bold text-lg tracking-tight"
-            aria-label="Been-go! home"
-          >
-            <span className="rounded-lg bg-primary-600 px-2 py-1 text-white">BEEN</span>
-            <span className="pl-1">-GO!</span>
+          <Link to={member ? '/browse' : '/'} aria-label="Been-go! home">
+            <Wordmark />
           </Link>
 
           {member && (
-            <nav className="hidden items-center gap-1 md:flex">
+            <nav className="hidden items-center gap-0.5 md:flex">
               {NAV.map(({ to, label, icon: Icon }) => (
                 <NavLink
                   key={to}
                   to={to}
                   className={({ isActive }) =>
-                    clsx(
-                      'flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-primary-50 text-primary-700 dark:bg-slate-800 dark:text-primary-400'
-                        : 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800',
-                    )
+                    clsx('nav-link', isActive && 'nav-link-active')
                   }
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3.5 w-3.5" />
                   {label}
                 </NavLink>
               ))}
             </nav>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+
             {userId ? (
               <>
                 {profile?.is_admin && (
-                  <Link
-                    to="/admin"
-                    className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50 md:flex dark:text-primary-400 dark:hover:bg-slate-800"
-                  >
-                    <ShieldCheck className="h-4 w-4" />
+                  <Link to="/admin" className="nav-link hidden text-primary md:flex">
+                    <ShieldCheck className="h-3.5 w-3.5" />
                     Admin
                   </Link>
                 )}
-                <Link
-                  to="/account"
-                  className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 md:flex dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  <UserCircle className="h-4 w-4" />
+                <Link to="/account" className="nav-link hidden md:flex">
+                  <UserCircle className="h-3.5 w-3.5" />
                   {profile?.display_name ?? 'Account'}
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="hidden rounded-lg p-2 text-gray-500 hover:bg-gray-100 md:block dark:hover:bg-slate-800"
+                  className="hidden rounded p-2 text-fg-subtle transition-colors hover:bg-panel2 hover:text-fg md:block"
                   aria-label="Sign out"
                 >
                   <LogOut className="h-4 w-4" />
@@ -96,7 +97,7 @@ export default function RootLayout() {
 
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden dark:text-slate-300 dark:hover:bg-slate-800"
+              className="rounded p-2 text-fg-muted transition-colors hover:bg-panel2 hover:text-fg md:hidden"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
             >
@@ -106,7 +107,7 @@ export default function RootLayout() {
         </Container>
 
         {menuOpen && (
-          <div className="border-t border-gray-200 bg-white md:hidden dark:border-slate-700 dark:bg-slate-900">
+          <div className="hairline-t bg-panel md:hidden">
             <Container className="flex flex-col py-2">
               {member &&
                 NAV.map(({ to, label, icon: Icon }) => (
@@ -114,7 +115,7 @@ export default function RootLayout() {
                     key={to}
                     to={to}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    className="nav-link !py-3"
                   >
                     <Icon className="h-4 w-4" />
                     {label}
@@ -123,25 +124,15 @@ export default function RootLayout() {
               {userId && (
                 <>
                   {profile?.is_admin && (
-                    <NavLink
-                      to="/admin"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-primary-700 hover:bg-gray-100 dark:text-primary-400 dark:hover:bg-slate-800"
-                    >
+                    <NavLink to="/admin" onClick={() => setMenuOpen(false)}
+                             className="nav-link !py-3 text-primary">
                       <ShieldCheck className="h-4 w-4" /> Admin
                     </NavLink>
                   )}
-                  <NavLink
-                    to="/account"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
+                  <NavLink to="/account" onClick={() => setMenuOpen(false)} className="nav-link !py-3">
                     <UserCircle className="h-4 w-4" /> Account
                   </NavLink>
-                  <button
-                    onClick={handleSignOut}
-                    className="flex items-center gap-2 rounded-lg px-3 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
+                  <button onClick={handleSignOut} className="nav-link !py-3 text-left">
                     <LogOut className="h-4 w-4" /> Sign out
                   </button>
                 </>
@@ -151,21 +142,23 @@ export default function RootLayout() {
         )}
       </header>
 
-      <main className="flex-1 py-8">
+      <main className="flex-1 py-10">
         <Outlet />
       </main>
 
-      <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-500 dark:border-slate-700">
-        <Container>
-          <nav className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1">
-            <Link to="/legal/terms"   className="hover:text-primary-600">Terms of Service</Link>
-            <Link to="/legal/rules"   className="hover:text-primary-600">Community Rules</Link>
-            <Link to="/legal/privacy" className="hover:text-primary-600">Privacy</Link>
+      <footer className="hairline-t py-10">
+        <Container className="text-center">
+          <nav className="mb-4 flex flex-wrap justify-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-micro text-fg-subtle">
+            <Link to="/legal/terms"   className="transition-colors hover:text-primary">Terms</Link>
+            <Link to="/legal/rules"   className="transition-colors hover:text-primary">Rules</Link>
+            <Link to="/legal/privacy" className="transition-colors hover:text-primary">Privacy</Link>
           </nav>
-          <p>Been-go! — invite only. Be good to each other.</p>
-          <p className="mt-1 text-xs">
-            Been-go! is a venue, not the seller. Payments are handled by Stripe — we never
-            see your card or bank details.
+          <p className="text-sm text-fg-muted">
+            Been-go! — invite only. Be good to each other.
+          </p>
+          <p className="mt-1.5 text-xs text-fg-subtle">
+            A venue, not the seller. Payments handled by Stripe — we never see your card
+            or bank details.
           </p>
         </Container>
       </footer>

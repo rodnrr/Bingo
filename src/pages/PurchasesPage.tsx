@@ -49,11 +49,11 @@ export default function PurchasesPage() {
                 <div className="min-w-0">
                   <Link
                     to={`/listing/${order.listing_id}`}
-                    className="font-medium hover:text-primary-600"
+                    className="font-medium hover:text-primary"
                   >
                     {order.listing?.title ?? 'Listing'}
                   </Link>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-fg-subtle">
                     from {order.seller?.display_name ?? 'a member'} · {timeAgo(order.created_at)}
                   </p>
                 </div>
@@ -64,7 +64,7 @@ export default function PurchasesPage() {
               </div>
 
               {order.tracking_number && (
-                <p className="text-sm text-gray-600 dark:text-slate-400">
+                <p className="text-sm text-fg-muted">
                   Tracking: {order.tracking_carrier ?? ''} <strong>{order.tracking_number}</strong>
                 </p>
               )}

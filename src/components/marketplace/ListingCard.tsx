@@ -5,52 +5,64 @@ import { CONDITION_LABELS, type Listing } from '@/types'
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   const photo = listing.photos?.[0]
+  const sold = listing.status === 'sold'
 
   return (
     <Link
       to={`/listing/${listing.id}`}
       className="card-hover group flex flex-col overflow-hidden !p-0"
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-slate-700">
+      <div className="relative aspect-square w-full overflow-hidden bg-panel2">
         {photo ? (
           <img
             src={photo.url}
             alt={listing.title}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-gray-400">
-            <ImageOff className="h-8 w-8" />
+          <div className="flex h-full w-full items-center justify-center text-fg-subtle">
+            <ImageOff className="h-7 w-7" />
           </div>
         )}
 
-        {listing.status === 'sold' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <span className="rounded-full bg-white px-4 py-1 text-sm font-bold uppercase tracking-wide">
-              Sold
-            </span>
+        {/* Keeps the price legible over a bright photo. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 opacity-70"
+          style={{ background: 'linear-gradient(to top, rgb(var(--panel)), transparent)' }}
+        />
+
+        <span className="badge-neutral absolute left-2 top-2 bg-panel/85 backdrop-blur-sm">
+          {CONDITION_LABELS[listing.condition]}
+        </span>
+
+        {sold && (
+          <div className="absolute inset-0 flex items-center justify-center bg-canvas/70 backdrop-blur-[1px]">
+            <span className="badge-danger bg-panel px-3 py-1 text-xs">Sold</span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-2 text-sm font-medium leading-snug">{listing.title}</h3>
+      <div className="flex flex-1 flex-col gap-2 p-3">
+        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-fg">
+          {listing.title}
+        </h3>
 
-        <p className="mt-auto pt-1 text-lg font-bold">
-          {money(listing.price_cents, listing.currency)}
-        </p>
-
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
-          <span>{CONDITION_LABELS[listing.condition]}</span>
-          <span>
+        <div className="mt-auto flex items-baseline justify-between gap-2 pt-1">
+          <p className="num text-lg font-medium text-fg">
+            {money(listing.price_cents, listing.currency)}
+          </p>
+          <p className="num text-[10px] uppercase tracking-micro text-fg-subtle">
             {listing.shipping_cents > 0
-              ? `+ ${money(listing.shipping_cents, listing.currency)} ship`
+              ? `+${money(listing.shipping_cents, listing.currency)}`
               : 'Free ship'}
-          </span>
+          </p>
         </div>
 
-        <p className="text-xs text-gray-400">{timeAgo(listing.created_at)}</p>
+        <p className="font-mono text-[10px] uppercase tracking-micro text-fg-subtle">
+          {timeAgo(listing.created_at)}
+        </p>
       </div>
     </Link>
   )

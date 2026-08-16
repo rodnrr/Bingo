@@ -101,8 +101,8 @@ export default function ListingDetailPage() {
       <Container>
         <Card>
           <h1 className="text-xl font-bold">Listing not found</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            It may have been removed. <Link to="/browse" className="text-primary-600">Back to browse</Link>
+          <p className="mt-1 text-sm text-fg-muted">
+            It may have been removed. <Link to="/browse" className="text-primary">Back to browse</Link>
           </p>
         </Card>
       </Container>
@@ -125,7 +125,7 @@ export default function ListingDetailPage() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* ── Photos ── */}
         <div>
-          <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-slate-800">
+          <div className="aspect-square w-full overflow-hidden rounded-2xl bg-panel2 ">
             {photos[activePhoto] ? (
               <img
                 src={photos[activePhoto].url}
@@ -133,7 +133,7 @@ export default function ListingDetailPage() {
                 className="h-full w-full object-contain"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-gray-400">
+              <div className="flex h-full w-full items-center justify-center text-fg-subtle">
                 <ImageOff className="h-10 w-10" />
               </div>
             )}
@@ -147,7 +147,7 @@ export default function ListingDetailPage() {
                   onClick={() => setActivePhoto(i)}
                   className={
                     'h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ' +
-                    (i === activePhoto ? 'border-primary-600' : 'border-transparent')
+                    (i === activePhoto ? 'border-primary' : 'border-transparent')
                   }
                 >
                   <img src={photo.url} alt="" className="h-full w-full object-cover" />
@@ -161,7 +161,7 @@ export default function ListingDetailPage() {
         <div className="space-y-5">
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">{listing.title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-fg-subtle">
               <span className="badge-neutral">{CONDITION_LABELS[listing.condition]}</span>
               {listing.status === 'sold' && <span className="badge-danger">Sold</span>}
               <span className="flex items-center gap-1">
@@ -172,15 +172,15 @@ export default function ListingDetailPage() {
           </div>
 
           <div>
-            <p className="text-3xl font-bold">{money(listing.price_cents, listing.currency)}</p>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600 dark:text-slate-400">
+            <p className="num text-4xl font-medium tracking-tight">{money(listing.price_cents, listing.currency)}</p>
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-fg-muted">
               <Truck className="h-4 w-4" />
               {listing.shipping_cents > 0
                 ? `${money(listing.shipping_cents, listing.currency)} shipping — ${money(total, listing.currency)} total`
                 : 'Free shipping'}
             </p>
             {listing.ships_from && (
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600 dark:text-slate-400">
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-fg-muted">
                 <Package className="h-4 w-4" /> Ships from {listing.ships_from}
               </p>
             )}
@@ -191,11 +191,11 @@ export default function ListingDetailPage() {
             <Card className="space-y-3">
               {myAcceptedOffer ? (
                 <>
-                  <p className="text-sm font-medium text-success-600">
+                  <p className="text-sm font-medium text-success">
                     Your offer of {money(myAcceptedOffer.amount_cents)} was accepted.
                   </p>
                   {myAcceptedOffer.pay_by && (
-                    <p className="text-xs text-warning-600">
+                    <p className="text-xs text-warning">
                       Pay by {new Date(myAcceptedOffer.pay_by).toLocaleString()} or the
                       offer lapses and the seller is free again.
                     </p>
@@ -222,13 +222,13 @@ export default function ListingDetailPage() {
 
               {listing.allow_offers && !myAcceptedOffer && (
                 myPendingOffer ? (
-                  <p className="text-center text-sm text-gray-600 dark:text-slate-400">
+                  <p className="text-center text-sm text-fg-muted">
                     Offer of {money(myPendingOffer.amount_cents)} sent — waiting on the seller.
                     It lapses {timeAgo(myPendingOffer.expires_at)}.
                   </p>
                 ) : (
                   <form
-                    className="space-y-2 border-t border-gray-200 pt-3 dark:border-slate-700"
+                    className="space-y-2 border-t border-line/10 pt-3 "
                     onSubmit={(e) => { e.preventDefault(); offer.mutate() }}
                   >
                     <label className="label" htmlFor="offer">Make an offer</label>
@@ -265,7 +265,7 @@ export default function ListingDetailPage() {
               </Button>
 
               {pendingForSeller.length > 0 && (
-                <div className="space-y-2 border-t border-gray-200 pt-3 dark:border-slate-700">
+                <div className="space-y-2 border-t border-line/10 pt-3 ">
                   <p className="text-sm font-semibold">
                     {pendingForSeller.length} pending offer{pendingForSeller.length > 1 ? 's' : ''}
                   </p>
@@ -273,10 +273,10 @@ export default function ListingDetailPage() {
                     <div key={o.id} className="flex items-center justify-between gap-2 text-sm">
                       <div>
                         <p className="font-medium">{money(o.amount_cents)}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-fg-subtle">
                           {o.buyer?.display_name ?? 'A member'} · {timeAgo(o.created_at)}
                         </p>
-                        {o.message && <p className="mt-0.5 text-xs italic text-gray-600">"{o.message}"</p>}
+                        {o.message && <p className="mt-0.5 text-xs italic text-fg-muted">"{o.message}"</p>}
                       </div>
                       <div className="flex gap-1">
                         <Button
@@ -305,13 +305,13 @@ export default function ListingDetailPage() {
           {listing.description && (
             <div>
               <h2 className="mb-1 font-semibold">Description</h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-slate-300">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
                 {listing.description}
               </p>
             </div>
           )}
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-fg-subtle">
             Sold by <strong>{listing.seller?.display_name ?? 'a member'}</strong>
           </p>
 

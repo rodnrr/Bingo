@@ -59,7 +59,7 @@ export default function SignupPage() {
       <Container className="max-w-md">
         <Card>
           <h1 className="text-2xl font-bold">Check your email</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
+          <p className="mt-2 text-sm text-fg-muted">
             We sent a confirmation link to <strong>{email}</strong>. Open it and you will land
             back here to finish joining. Your invite code is saved on this device.
           </p>
@@ -72,7 +72,7 @@ export default function SignupPage() {
     <Container className="max-w-md">
       <Card>
         <h1 className="text-2xl font-bold">Join Been-go!</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-muted">
           You need an invite code from an existing member.
         </p>
 
@@ -139,7 +139,7 @@ export default function SignupPage() {
 
         <p className="mt-4 text-center text-sm">
           Already a member?{' '}
-          <Link to="/login" className="text-primary-600 hover:underline">Sign in</Link>
+          <Link to="/login" className="text-primary hover:underline">Sign in</Link>
         </p>
       </Card>
     </Container>

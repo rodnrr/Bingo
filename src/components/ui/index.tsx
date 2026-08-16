@@ -1,9 +1,9 @@
 // ================================================================
-// Been-go — UI primitives
+// Been-go! — UI primitives
 //
-// Kept in one file on purpose: six small presentational components
-// that always change together. Split them out the day one of them
-// grows real behaviour.
+// Kept in one file on purpose: small presentational components that
+// always change together. Split them out the day one grows real
+// behaviour.
 // ================================================================
 
 import clsx from 'clsx'
@@ -81,36 +81,41 @@ export function PageHeading({ title, subtitle, action }: {
   action?: ReactNode
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">{subtitle}</p>}
+        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
+        {subtitle && <p className="mt-2 text-sm text-fg-muted">{subtitle}</p>}
       </div>
       {action}
     </div>
   )
 }
 
+/** Wide-tracked micro caps with a fading rule — section markers. */
+export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
+  return <p className={clsx('eyebrow', className)}>{children}</p>
+}
+
 // ── Feedback ─────────────────────────────────────────────────────
 
+/** A sweeping bar rather than a spinner — it matches the instrument look. */
 export function Spinner({ className }: { className?: string }) {
   return (
     <div
       role="status"
       aria-label="Loading"
-      className={clsx(
-        'h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600',
-        className,
-      )}
-    />
+      className={clsx('relative h-px w-28 overflow-hidden bg-panel2', className)}
+    >
+      <span className="absolute inset-y-0 left-0 w-1/4 bg-primary animate-sweep shadow-glow-sm" />
+    </div>
   )
 }
 
-export function LoadingBlock({ label = 'Loading…' }: { label?: string }) {
+export function LoadingBlock({ label = 'Loading' }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-500">
+    <div className="flex flex-col items-center justify-center gap-4 py-20">
       <Spinner />
-      <p className="text-sm">{label}</p>
+      <p className="font-mono text-[10px] uppercase tracking-micro text-fg-subtle">{label}</p>
     </div>
   )
 }
@@ -121,10 +126,10 @@ export function EmptyState({ title, body, action }: {
   action?: ReactNode
 }) {
   return (
-    <div className="card flex flex-col items-center gap-3 py-14 text-center">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      {body && <p className="max-w-md text-sm text-gray-600 dark:text-slate-400">{body}</p>}
-      {action}
+    <div className="card hud flex flex-col items-center gap-3 py-16 text-center">
+      <h3 className="font-display text-lg font-semibold">{title}</h3>
+      {body && <p className="max-w-md text-sm text-fg-muted">{body}</p>}
+      {action && <div className="mt-2">{action}</div>}
     </div>
   )
 }
@@ -132,7 +137,7 @@ export function EmptyState({ title, body, action }: {
 export function ErrorNote({ error }: { error: unknown }) {
   const message = error instanceof Error ? error.message : 'Something went wrong'
   return (
-    <div className="rounded-xl border border-danger-500/30 bg-danger-50 px-4 py-3 text-sm text-danger-600">
+    <div className="rounded border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
       {message}
     </div>
   )

@@ -37,7 +37,7 @@ export default function ReportDialog({ listingId }: { listingId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-danger-600"
+        className="flex items-center gap-1.5 text-xs text-fg-subtle hover:text-danger"
       >
         <Flag className="h-3.5 w-3.5" /> Report this listing
       </button>
@@ -45,10 +45,10 @@ export default function ReportDialog({ listingId }: { listingId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 p-4 dark:border-slate-700">
+    <div className="rounded-xl border border-line/10 p-4 ">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">Report this listing</h3>
-        <button onClick={() => setOpen(false)} aria-label="Close" className="text-gray-400 hover:text-gray-700">
+        <button onClick={() => setOpen(false)} aria-label="Close" className="text-fg-subtle hover:text-fg-muted">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -92,7 +92,7 @@ export default function ReportDialog({ listingId }: { listingId: string }) {
           </Button>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-subtle">
           The seller is not told who reported them. If you think something is stolen or
           someone is in danger, contact your local authorities first.
         </p>

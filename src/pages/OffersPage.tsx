@@ -54,11 +54,11 @@ export default function OffersPage() {
       <div className="min-w-0 flex-1">
         <Link
           to={`/listing/${offer.listing_id}`}
-          className="font-medium hover:text-primary-600"
+          className="font-medium hover:text-primary"
         >
           {offer.listing?.title ?? 'Listing'}
         </Link>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-subtle">
           {side === 'received'
             ? `${offer.buyer?.display_name ?? 'A member'} offered`
             : 'You offered'}{' '}
@@ -67,7 +67,7 @@ export default function OffersPage() {
           {' · '}{timeAgo(offer.created_at)}
         </p>
         {offer.message && (
-          <p className="mt-1 text-sm italic text-gray-600 dark:text-slate-400">"{offer.message}"</p>
+          <p className="mt-1 text-sm italic text-fg-muted">"{offer.message}"</p>
         )}
       </div>
 
@@ -118,24 +118,24 @@ export default function OffersPage() {
       ) : (
         <div className="space-y-8">
           <section>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-fg-subtle">
               Received ({received.length})
             </h2>
             {received.length ? (
               <div className="space-y-2">{received.map((o) => row(o, 'received'))}</div>
             ) : (
-              <p className="text-sm text-gray-500">Nothing yet.</p>
+              <p className="text-sm text-fg-subtle">Nothing yet.</p>
             )}
           </section>
 
           <section>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-fg-subtle">
               Sent ({sent.length})
             </h2>
             {sent.length ? (
               <div className="space-y-2">{sent.map((o) => row(o, 'sent'))}</div>
             ) : (
-              <p className="text-sm text-gray-500">Nothing yet.</p>
+              <p className="text-sm text-fg-subtle">Nothing yet.</p>
             )}
           </section>
         </div>

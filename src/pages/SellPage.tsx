@@ -143,12 +143,12 @@ export default function SellPage() {
       />
 
       {!canSell(profile) && (
-        <Card className="mb-4 border border-warning-500/30 bg-warning-50">
+        <Card className="mb-4 border border-warning/30 bg-warning/10">
           <div className="flex gap-3">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-warning-600" />
+            <AlertTriangle className="h-5 w-5 shrink-0 text-warning" />
             <div>
-              <p className="font-semibold text-warning-600">Payouts not set up yet</p>
-              <p className="mt-1 text-sm text-gray-700">
+              <p className="font-semibold text-warning">Payouts not set up yet</p>
+              <p className="mt-1 text-sm text-fg-muted">
                 You can write and save a listing now, but buyers cannot check out until Stripe
                 has your bank details. It takes about two minutes.
               </p>
@@ -267,7 +267,7 @@ export default function SellPage() {
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-primary-600"
+            className="h-4 w-4 rounded border-line/10 text-primary"
             checked={form.allow_offers}
             onChange={(e) => set('allow_offers', e.target.checked)}
           />
@@ -275,14 +275,14 @@ export default function SellPage() {
         </label>
 
         {priceCents > 0 && feeBps !== null && (
-          <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm dark:bg-slate-700/50">
+          <div className="rounded-xl bg-panel2 px-4 py-3 text-sm ">
             <p className="flex justify-between">
               <span>Item price</span><span>{money(priceCents)}</span>
             </p>
-            <p className="flex justify-between text-gray-600 dark:text-slate-400">
+            <p className="flex justify-between text-fg-muted">
               <span>Been-go! fee ({feeBps / 100}%)</span><span>−{money(feeCents)}</span>
             </p>
-            <p className="mt-1 flex justify-between border-t border-gray-200 pt-1 font-semibold dark:border-slate-600">
+            <p className="mt-1 flex justify-between border-t border-line/10 pt-1 font-semibold ">
               <span>You receive</span><span>{money(payoutCents)}</span>
             </p>
             <p className="hint">Shipping is passed through in full — no fee on postage.</p>
@@ -317,7 +317,7 @@ export default function SellPage() {
         {id && (
           <Button
             variant="ghost"
-            className="ml-auto text-danger-600"
+            className="ml-auto text-danger"
             disabled={drop.isPending}
             onClick={() => {
               if (confirm('Remove this listing? Buyers will no longer see it.')) drop.mutate()

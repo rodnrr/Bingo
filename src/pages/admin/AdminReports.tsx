@@ -59,10 +59,10 @@ export default function AdminReports() {
             key={label}
             onClick={() => setFilter(value)}
             className={clsx(
-              'rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+              'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors',
               filter === value
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-800 dark:text-slate-300',
+                ? 'bg-primary text-primary-fg'
+                : 'bg-panel2 text-fg-muted hairline hover:text-fg',
             )}
           >
             {label}
@@ -92,14 +92,14 @@ export default function AdminReports() {
                         {' — '}
                         <Link
                           to={`/listing/${report.listing.id}`}
-                          className="text-primary-600 hover:underline"
+                          className="text-primary hover:underline"
                         >
                           {report.listing.title}
                         </Link>
                       </>
                     )}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-fg-subtle">
                     reported by {report.reporter?.display_name ?? 'a member'} ·{' '}
                     {timeAgo(report.created_at)}
                     {report.listing?.status === 'removed' && ' · listing already removed'}
@@ -109,13 +109,13 @@ export default function AdminReports() {
               </div>
 
               {report.detail && (
-                <p className="rounded-xl bg-gray-50 px-3 py-2 text-sm dark:bg-slate-700/50">
+                <p className="rounded-xl bg-panel2 px-3 py-2 text-sm ">
                   {report.detail}
                 </p>
               )}
 
               {report.admin_note && (
-                <p className="text-xs text-gray-500">Note: {report.admin_note}</p>
+                <p className="text-xs text-fg-subtle">Note: {report.admin_note}</p>
               )}
 
               {(report.status === 'open' || report.status === 'reviewing') && (
