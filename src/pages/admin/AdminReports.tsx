@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import clsx from 'clsx'
 import { adminListReports, adminRemoveListing, adminResolveReport } from '@/lib/api'
 import { timeAgo } from '@/lib/format'
 import { toast } from '@/lib/store'
-import { Button, Card, EmptyState, ErrorNote, LoadingBlock } from '@/components/ui'
+import { Button, Card, Chip, ChipRail, EmptyState, ErrorNote, LoadingBlock } from '@/components/ui'
 import { REPORT_REASON_LABELS, type ReportStatus } from '@/types'
 
 const FILTERS: { label: string; value: ReportStatus | undefined }[] = [
@@ -53,22 +52,13 @@ export default function AdminReports() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-2">
+      <ChipRail className="mb-4">
         {FILTERS.map(({ label, value }) => (
-          <button
-            key={label}
-            onClick={() => setFilter(value)}
-            className={clsx(
-              'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors',
-              filter === value
-                ? 'bg-primary text-primary-fg'
-                : 'bg-panel2 text-fg-muted hairline hover:text-fg',
-            )}
-          >
+          <Chip key={label} active={filter === value} onClick={() => setFilter(value)}>
             {label}
-          </button>
+          </Chip>
         ))}
-      </div>
+      </ChipRail>
 
       {error && <ErrorNote error={error} />}
 

@@ -251,6 +251,14 @@
     -webkit-box-orient: vertical; overflow: hidden;
   }
 
+  /* A rail you scroll with a finger or a trackpad; the bar itself is
+     noise on a one-line strip. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
   .hairline { border: 1px solid rgb(var(--line) / var(--line-alpha)); }
   .hairline-t { border-top: 1px solid rgb(var(--line) / var(--line-alpha)); }
   .hairline-b { border-bottom: 1px solid rgb(var(--line) / var(--line-alpha)); }

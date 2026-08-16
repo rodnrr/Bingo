@@ -1,10 +1,10 @@
 import { NavLink, useParams, Navigate } from 'react-router-dom'
-import clsx from 'clsx'
 import termsDoc from '@/legal/terms.md?raw'
 import rulesDoc from '@/legal/rules.md?raw'
 import privacyDoc from '@/legal/privacy.md?raw'
 import Markdown from '@/components/shared/Markdown'
-import { Card, Container } from '@/components/ui'
+import { Card, ChipMark, ChipRail, Container } from '@/components/ui'
+import { chipClass } from '@/components/ui/chipClass'
 
 const DOCS = {
   terms:   { label: 'Terms of Service', source: termsDoc },
@@ -30,24 +30,22 @@ export default function LegalPage() {
 
   return (
     <Container className="max-w-3xl">
-      <nav className="mb-6 flex flex-wrap gap-2">
+      <ChipRail className="mb-6">
         {(Object.keys(DOCS) as DocKey[]).map((key) => (
           <NavLink
             key={key}
             to={`/legal/${key}`}
-            className={({ isActive }) =>
-              clsx(
-                'rounded px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-fg'
-                  : 'bg-panel2 text-fg-muted hairline hover:text-fg',
-              )
-            }
+            className={({ isActive }) => chipClass(isActive)}
           >
-            {DOCS[key].label}
+            {({ isActive }) => (
+              <>
+                <ChipMark active={isActive} />
+                <span>{DOCS[key].label}</span>
+              </>
+            )}
           </NavLink>
         ))}
-      </nav>
+      </ChipRail>
 
       <Card className="!p-6 sm:!p-8">
         <Markdown source={active.source} />

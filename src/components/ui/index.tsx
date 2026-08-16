@@ -8,6 +8,8 @@
 
 import clsx from 'clsx'
 import { Link, type LinkProps } from 'react-router-dom'
+
+export { Chip, ChipRail, ChipMark } from './Chip'
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react'
 
 // ── Button ───────────────────────────────────────────────────────

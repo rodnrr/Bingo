@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Truck, Package, Eye, CheckCircle2, AlertTriangle } from 'lucide-react'
 import ListingCard from '@/components/marketplace/ListingCard'
-import { Button, Card, Container, PageHeading } from '@/components/ui'
+import { Button, Card, Chip, ChipRail, Container, PageHeading } from '@/components/ui'
+import { categoryIcon, AllIcon } from '@/lib/categoryIcons'
 import { money } from '@/lib/format'
 import { CONDITION_LABELS, type Listing } from '@/types'
 
@@ -67,6 +68,14 @@ const LISTINGS: Listing[] = [
 
 const FEE_BPS = 800
 
+/** The real seed, so the rail is exercised at the width it ships at. */
+const PREVIEW_CATEGORIES: [string, string][] = [
+  ['Electronics', 'smartphone'], ['Clothing & Shoes', 'shirt'], ['Home & Garden', 'lamp'],
+  ['Tools & Equipment', 'wrench'], ['Vehicles & Parts', 'car'], ['Collectibles & Art', 'palette'],
+  ['Musical Instruments', 'music'], ['Sports & Outdoors', 'bike'], ['Toys & Games', 'gamepad-2'],
+  ['Books & Media', 'book-open'], ['Health & Beauty', 'sparkles'], ['Everything Else', 'package'],
+]
+
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <Card className="!p-4">
@@ -99,19 +108,12 @@ export default function PreviewPage() {
         action={<Button>Sell something</Button>}
       />
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        {['All', 'Electronics', 'Tools & Equipment', 'Musical Instruments', 'Home & Garden'].map((c, i) => (
-          <button
-            key={c}
-            className={
-              'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide ' +
-              (i === 0 ? 'bg-primary text-primary-fg' : 'bg-panel2 text-fg-muted hairline')
-            }
-          >
-            {c}
-          </button>
+      <ChipRail className="mb-4">
+        <Chip icon={AllIcon} active>All</Chip>
+        {PREVIEW_CATEGORIES.map(([name, icon]) => (
+          <Chip key={name} icon={categoryIcon(icon)}>{name}</Chip>
         ))}
-      </div>
+      </ChipRail>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {LISTINGS.map((l) => <ListingCard key={l.id} listing={l} />)}
@@ -218,19 +220,11 @@ export default function PreviewPage() {
         Admin console
       </h2>
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <ChipRail className="mb-4">
         {['Overview', 'Members', 'Reports', 'Settings'].map((t, i) => (
-          <button
-            key={t}
-            className={
-              'rounded px-4 py-2 text-xs font-medium uppercase tracking-wide ' +
-              (i === 0 ? 'bg-primary text-primary-fg' : 'bg-panel2 text-fg-muted hairline')
-            }
-          >
-            {t}
-          </button>
+          <Chip key={t} active={i === 0}>{t}</Chip>
         ))}
-      </div>
+      </ChipRail>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Active members"  value="128" />

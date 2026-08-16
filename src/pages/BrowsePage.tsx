@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, X } from 'lucide-react'
-import clsx from 'clsx'
 import { browseListings, listCategories } from '@/lib/api'
 import { parseMoney } from '@/lib/format'
+import { categoryIcon, AllIcon } from '@/lib/categoryIcons'
 import ListingCard from '@/components/marketplace/ListingCard'
 import {
-  Button, Container, EmptyState, ErrorNote, LoadingBlock, PageHeading,
+  Button, Chip, ChipRail, Container, EmptyState, ErrorNote, LoadingBlock, PageHeading,
 } from '@/components/ui'
 
 export default function BrowsePage() {
@@ -70,43 +70,31 @@ export default function BrowsePage() {
         <Button type="submit">Search</Button>
       </form>
 
-      <div className="mb-6 flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setParam('category', '')}
-          className={clsx(
-            'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors',
-            !category
-              ? 'bg-primary text-primary-fg'
-              : 'bg-panel2 text-fg-muted hairline hover:text-fg',
-          )}
-        >
+      <ChipRail className="mb-6">
+        <Chip icon={AllIcon} active={!category} onClick={() => setParam('category', '')}>
           All
-        </button>
+        </Chip>
 
         {categories?.map((c) => (
-          <button
+          <Chip
             key={c.slug}
+            icon={categoryIcon(c.icon)}
+            active={c.slug === category}
             onClick={() => setParam('category', c.slug === category ? '' : c.slug)}
-            className={clsx(
-              'rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors',
-              c.slug === category
-                ? 'bg-primary text-primary-fg'
-                : 'bg-panel2 text-fg-muted hairline hover:text-fg',
-            )}
           >
             {c.name}
-          </button>
+          </Chip>
         ))}
 
         {hasFilters && (
           <button
             onClick={() => setParams(new URLSearchParams(), { replace: true })}
-            className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-fg-subtle hover:text-fg"
+            className="ml-1 flex shrink-0 items-center gap-1 rounded px-2.5 py-1.5 text-xs text-fg-subtle transition-colors hover:text-danger"
           >
             <X className="h-3.5 w-3.5" /> Clear
           </button>
         )}
-      </div>
+      </ChipRail>
 
       {error && <ErrorNote error={error} />}
 

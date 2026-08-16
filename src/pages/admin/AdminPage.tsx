@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { adminStats } from '@/lib/api'
 import { money } from '@/lib/format'
 import { useAuthStore } from '@/lib/store'
-import { Card, Container, ErrorNote, LoadingBlock, PageHeading } from '@/components/ui'
+import { Card, Chip, ChipRail, Container, ErrorNote, LoadingBlock, PageHeading } from '@/components/ui'
 import AdminMembers from './AdminMembers'
 import AdminReports from './AdminReports'
 import AdminSettings from './AdminSettings'
@@ -71,22 +71,11 @@ export default function AdminPage() {
     <Container>
       <PageHeading title="Admin" subtitle="Members, reports, and platform settings." />
 
-      <div className="mb-6 flex flex-wrap gap-2">
+      <ChipRail className="mb-6">
         {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={clsx(
-              'rounded px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors',
-              t === tab
-                ? 'bg-primary text-primary-fg'
-                : 'bg-panel2 text-fg-muted hairline hover:text-fg',
-            )}
-          >
-            {t}
-          </button>
+          <Chip key={t} active={t === tab} onClick={() => setTab(t)}>{t}</Chip>
         ))}
-      </div>
+      </ChipRail>
 
       {tab === 'Overview' && <Overview />}
       {tab === 'Members'  && <AdminMembers />}
