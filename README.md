@@ -91,9 +91,16 @@ admins. Listing, offering, and buying all require the current version in RLS.
 
 ### Photos
 
-Uploaded to the `listing-photos` bucket under `{user_id}/{listing_id}/{uuid}`,
-with a storage policy requiring that first path segment to be the uploader's own
-id. Public read, because a listing photo is public the moment the listing is.
+Up to 8 per listing, 5 MB each, uploaded to the `listing-photos` bucket under
+`{user_id}/{listing_id}/{uuid}` — with a storage policy requiring that first
+path segment to be the uploader's own id. Public read, because a listing photo
+is public the moment the listing is.
+
+**The lowest `position` is the cover**, and the cover is what the browse grid,
+the seller's listings page, and every order summary show. Sellers pick it by
+hovering a photo and choosing *Cover*; `set_listing_cover()` promotes it and
+closes the ranks behind it in one statement, so a listing can never end up with
+two photos claiming position 0.
 
 ## Layout
 
@@ -135,8 +142,9 @@ as StreetRise. They are not run by the deploy pipeline.
 | `008_moderation_and_safety.sql` | Reports, suspension with teeth, admin actions + audit log |
 | `009_fix_trusted_writes.sql` | Lets the trusted RPCs write the columns they own — see below |
 | `010_lock_internal_functions.sql` | Stops PostgREST exposing the internal helpers as public RPCs |
+| `011_listing_cover_photo.sql` | Lets a seller choose which photo is the cover |
 
-All ten are **applied** to the live project (`kktiqfvxoljvnxmrclyq`).
+All eleven are **applied** to the live project (`kktiqfvxoljvnxmrclyq`).
 
 ### Testing them before they touch anything
 

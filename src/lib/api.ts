@@ -9,8 +9,8 @@
 
 import { supabase, callFunction, PHOTO_BUCKET } from './supabase'
 import type {
-  AdminAction, AdminStats, Category, Invite, Listing, ListingCondition, MemberStatus,
-  Offer, Order, PlatformSettings, Profile, Report, ReportReason, ReportStatus,
+  AdminAction, AdminStats, Category, Invite, Listing, ListingCondition, ListingPhoto,
+  MemberStatus, Offer, Order, PlatformSettings, Profile, Report, ReportReason, ReportStatus,
 } from '@/types'
 
 const LISTING_SELECT = `
@@ -282,6 +282,45 @@ export async function deletePhoto(photoId: string, storagePath: string): Promise
   // Best effort: an orphaned object costs pennies, a failed delete that
   // blocks the UI costs a listing edit.
   await supabase.storage.from(PHOTO_BUCKET).remove([storagePath])
+}
+
+/**
+ * The next free position for a listing, so a new photo lands after the
+ * existing ones.
+ *
+ * Not `photos.length`: delete the middle of three and you have
+ * positions 0 and 2, and a length-based number collides with the 2 that
+ * is already there. Two photos then claim the same slot and which one
+ * becomes the cover is down to whatever order Postgres returns.
+ */
+export async function nextPhotoPosition(listingId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('listing_photos')
+    .select('position')
+    .eq('listing_id', listingId)
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  return data ? (data as { position: number }).position + 1 : 0
+}
+
+/**
+ * Promote a photo to cover. Everything else closes ranks behind it,
+ * keeping its relative order — done in one RPC so the listing can never
+ * be left with two photos claiming position 0.
+ */
+export async function setCoverPhoto(
+  listingId: string,
+  photoId: string,
+): Promise<ListingPhoto[]> {
+  return unwrap(
+    await supabase.rpc('set_listing_cover', {
+      p_listing_id: listingId,
+      p_photo_id: photoId,
+    }),
+  ) as ListingPhoto[]
 }
 
 // ── Offers ───────────────────────────────────────────────────────

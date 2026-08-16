@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Truck, Package, Eye, CheckCircle2, AlertTriangle } from 'lucide-react'
 import ListingCard from '@/components/marketplace/ListingCard'
+import PhotoUploader from '@/components/marketplace/PhotoUploader'
 import { Button, Card, Chip, ChipRail, Container, PageHeading } from '@/components/ui'
 import { categoryIcon, AllIcon } from '@/lib/categoryIcons'
 import { money } from '@/lib/format'
@@ -67,6 +68,18 @@ const LISTINGS: Listing[] = [
 ]
 
 const FEE_BPS = 800
+
+/** Three shots of the same item, to show the cover control. */
+const PREVIEW_PHOTOS = [
+  ['#b45309', 'Front'], ['#7c2d12', 'Back'], ['#334155', 'Case'],
+].map(([colour, label], i) => ({
+  id: `photo-${i}`,
+  listing_id: 'preview',
+  storage_path: '',
+  url: swatch(colour, label),
+  position: i,
+  created_at: new Date().toISOString(),
+}))
 
 /** The real seed, so the rail is exercised at the width it ships at. */
 const PREVIEW_CATEGORIES: [string, string][] = [
@@ -214,6 +227,20 @@ export default function PreviewPage() {
           </div>
         </Card>
       </div>
+
+      {/* ── Photo uploader ── */}
+      <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-fg-subtle">
+        Listing photos
+      </h2>
+
+      <Card className="max-w-2xl">
+        <PhotoUploader
+          userId="preview"
+          listingId="preview"
+          photos={PREVIEW_PHOTOS}
+          onChange={() => {}}
+        />
+      </Card>
 
       {/* ── Admin ── */}
       <h2 className="mb-4 mt-14 text-lg font-semibold uppercase tracking-wide text-fg-subtle">

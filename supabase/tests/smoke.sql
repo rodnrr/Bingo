@@ -170,3 +170,38 @@ VALUES ('aaaaaaaa-0000-0000-0000-000000000001',
         '11111111-1111-1111-1111-111111111111',
         5000, 5000, 'pending_payment', NOW() - INTERVAL '2 hours');
 SELECT release_stale_reservations() = 1 AS pass;
+
+-- ── Cover photo ──────────────────────────────────────────────────
+\echo '### 19. The first photo by position is the cover, and it is choosable'
+SET request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+INSERT INTO listing_photos (id, listing_id, storage_path, url, position) VALUES
+  ('eeee0000-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','a','a',0),
+  ('eeee0000-0000-0000-0000-000000000002','aaaaaaaa-0000-0000-0000-000000000001','b','b',1),
+  ('eeee0000-0000-0000-0000-000000000003','aaaaaaaa-0000-0000-0000-000000000001','c','c',2);
+
+-- Promote the third photo.
+SELECT count(*) = 3 AS pass FROM set_listing_cover(
+  'aaaaaaaa-0000-0000-0000-000000000001', 'eeee0000-0000-0000-0000-000000000003');
+
+SELECT position = 0 AS pass FROM listing_photos WHERE id = 'eeee0000-0000-0000-0000-000000000003';
+
+\echo '### 20. The others close ranks, keeping their order, with no collisions'
+SELECT array_agg(id ORDER BY position) = ARRAY[
+         'eeee0000-0000-0000-0000-000000000003',
+         'eeee0000-0000-0000-0000-000000000001',
+         'eeee0000-0000-0000-0000-000000000002']::uuid[] AS pass
+  FROM listing_photos WHERE listing_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+SELECT count(DISTINCT position) = 3 AS pass
+  FROM listing_photos WHERE listing_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+\echo '### 21. Somebody else cannot re-cover your listing'
+SET request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+DO $$
+BEGIN
+  PERFORM set_listing_cover('aaaaaaaa-0000-0000-0000-000000000001',
+                            'eeee0000-0000-0000-0000-000000000001');
+  RAISE EXCEPTION 'FAIL — a stranger reordered someone else''s photos';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE '%Not your listing%' THEN RAISE NOTICE 'pass'; ELSE RAISE; END IF;
+END $$;

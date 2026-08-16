@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import { ImagePlus, Trash2 } from 'lucide-react'
-import { uploadPhoto, deletePhoto } from '@/lib/api'
+import { ImagePlus, Trash2, Star } from 'lucide-react'
+import { uploadPhoto, deletePhoto, setCoverPhoto, nextPhotoPosition } from '@/lib/api'
 import { toast } from '@/lib/store'
 import { Spinner } from '@/components/ui'
 import type { ListingPhoto } from '@/types'
@@ -19,10 +19,16 @@ interface Props {
  * Photos upload immediately rather than being staged until save. That
  * requires the listing row to exist first — which is why SellPage
  * creates the listing as a draft before showing this component.
+ *
+ * The first photo is the cover: it is what the browse grid, the
+ * seller's own listings page, and every order summary show. So it has
+ * to be choosable, not just whichever file the seller happened to pick
+ * first in the dialog.
  */
 export default function PhotoUploader({ userId, listingId, photos, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const [pendingCover, setPendingCover] = useState<string | null>(null)
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return
@@ -42,10 +48,14 @@ export default function PhotoUploader({ userId, listingId, photos, onChange }: P
 
     setBusy(true)
     try {
+      // Read the next slot from the database rather than counting the
+      // photos on screen: after a delete, positions have a gap, and a
+      // count-based number collides with one already in use.
+      let position = await nextPhotoPosition(listingId)
+
       // Sequential, not Promise.all: position must be deterministic, and
       // eight parallel uploads on a phone connection is how you get a
       // half-uploaded gallery.
-      let position = photos.length
       for (const file of chosen) {
         await uploadPhoto(userId, listingId, file, position)
         position += 1
@@ -68,37 +78,83 @@ export default function PhotoUploader({ userId, listingId, photos, onChange }: P
     }
   }
 
+  const handleCover = async (photo: ListingPhoto) => {
+    setPendingCover(photo.id)
+    try {
+      await setCoverPhoto(listingId, photo.id)
+      onChange()
+      toast.success('Cover photo updated')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not set the cover')
+    } finally {
+      setPendingCover(null)
+    }
+  }
+
   return (
     <div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {photos.map((photo, i) => (
-          <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-xl bg-panel2">
-            <img src={photo.url} alt="" className="h-full w-full object-cover" />
-            {i === 0 && (
-              <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                Cover
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => handleDelete(photo)}
-              aria-label="Remove photo"
-              className="absolute right-1 top-1 rounded-lg bg-black/60 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+        {photos.map((photo, i) => {
+          const isCover = i === 0
+          return (
+            <div
+              key={photo.id}
+              className={
+                'group relative aspect-square overflow-hidden rounded bg-panel2 ' +
+                (isCover ? 'ring-1 ring-primary/60' : '')
+              }
             >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
+              <img src={photo.url} alt="" className="h-full w-full object-cover" />
+
+              {isCover && (
+                <span className="badge-primary absolute left-1.5 top-1.5 bg-panel/85 backdrop-blur-sm">
+                  Cover
+                </span>
+              )}
+
+              {/* Actions sit under a scrim so they stay legible on a
+                  pale photo. Revealed on hover, and on focus so the
+                  keyboard path is not a dead end. */}
+              <div className="absolute inset-0 flex items-end justify-between gap-1 bg-gradient-to-t from-black/70 via-transparent to-transparent p-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                {!isCover ? (
+                  <button
+                    type="button"
+                    onClick={() => handleCover(photo)}
+                    disabled={pendingCover !== null}
+                    className="flex items-center gap-1 rounded bg-black/60 px-1.5 py-1 font-mono text-[9px] uppercase tracking-micro text-white backdrop-blur-sm transition-colors hover:text-primary disabled:opacity-50"
+                    title="Use as the cover photo"
+                  >
+                    <Star className="h-3 w-3" />
+                    {pendingCover === photo.id ? 'Setting' : 'Cover'}
+                  </button>
+                ) : (
+                  <span />
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(photo)}
+                  aria-label="Remove photo"
+                  className="rounded bg-black/60 p-1.5 text-white backdrop-blur-sm transition-colors hover:text-danger"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          )
+        })}
 
         {photos.length < MAX_PHOTOS && (
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line/10 text-fg-subtle transition-colors hover:border-primary hover:text-primary disabled:opacity-50 "
+            className="flex aspect-square flex-col items-center justify-center gap-2 rounded border border-dashed border-line/20 text-fg-subtle transition-colors hover:border-primary/50 hover:text-primary disabled:opacity-50"
           >
-            {busy ? <Spinner className="h-5 w-5" /> : <ImagePlus className="h-6 w-6" />}
-            <span className="text-xs">{busy ? 'Uploading' : 'Add'}</span>
+            {busy ? <Spinner className="w-10" /> : <ImagePlus className="h-5 w-5" />}
+            <span className="font-mono text-[9px] uppercase tracking-micro">
+              {busy ? 'Uploading' : 'Add'}
+            </span>
           </button>
         )}
       </div>
@@ -113,7 +169,8 @@ export default function PhotoUploader({ userId, listingId, photos, onChange }: P
       />
 
       <p className="hint">
-        First photo is the cover. Up to {MAX_PHOTOS} photos, 5 MB each.
+        The cover is what buyers see in the grid. Hover any photo to make it the cover
+        or remove it. Up to {MAX_PHOTOS} photos, 5 MB each.
       </p>
     </div>
   )
