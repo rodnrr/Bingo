@@ -1,12 +1,12 @@
 import type { Config } from 'tailwindcss'
 
 // ================================================================
-// Been-go! — "amber terminal"
+// Been-go! — palette and scales
 //
-// The look is dark-first, near-black surfaces separated by hairlines
-// rather than shadows, with one luminous accent. Amber rather than the
-// usual cyan/violet: it keeps the brand orange, and it is the road less
-// travelled in this genre, which is most of what makes it distinctive.
+// The colour set is the original one: gray-50 page, white cards,
+// orange-600 brand, teal accent. The structure the redesign added —
+// semantic tokens, mono numerals, tighter radii — stays; only the
+// colours went back.
 //
 // Semantic tokens (canvas/panel/line/fg/…) resolve to CSS variables
 // defined in globals.css, so light and dark are one set of classes and
@@ -51,9 +51,9 @@ export default {
           900: '#7c2d12',
         },
 
-        success: { DEFAULT: '#34d399', 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' },
-        warning: { DEFAULT: '#fbbf24', 50: '#fffbeb', 500: '#f59e0b', 600: '#d97706' },
-        danger:  { DEFAULT: '#fb7185', 50: '#fef2f2', 500: '#ef4444', 600: '#dc2626' },
+        success: { DEFAULT: '#16a34a', 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' },
+        warning: { DEFAULT: '#d97706', 50: '#fffbeb', 500: '#f59e0b', 600: '#d97706' },
+        danger:  { DEFAULT: '#dc2626', 50: '#fef2f2', 500: '#ef4444', 600: '#dc2626' },
       },
 
       fontFamily: {
@@ -83,11 +83,12 @@ export default {
       screens: { xs: '375px' },
 
       boxShadow: {
-        // Depth comes from a lit top edge and a soft floor, not a blur halo.
-        panel: '0 1px 0 0 rgb(var(--line) / 0.06) inset, 0 8px 24px -12px rgb(0 0 0 / 0.55)',
-        lift:  '0 1px 0 0 rgb(var(--line) / 0.10) inset, 0 16px 40px -16px rgb(0 0 0 / 0.65)',
-        glow:  '0 0 0 1px rgb(var(--primary) / 0.35), 0 0 28px -6px rgb(var(--primary) / 0.45)',
-        'glow-sm': '0 0 18px -6px rgb(var(--primary) / 0.55)',
+        panel: '0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08)',
+        lift:  '0 4px 6px -1px rgb(0 0 0 / 0.10), 0 2px 4px -2px rgb(0 0 0 / 0.10)',
+        // Kept so the tokens still resolve, but scaled to nothing —
+        // the original set had no bloom anywhere.
+        glow:     '0 0 0 1px rgb(var(--primary) / 0.25)',
+        'glow-sm': '0 0 0 0 transparent',
       },
 
       backgroundImage: {

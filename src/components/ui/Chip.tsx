@@ -25,7 +25,6 @@ export function ChipMark({ active }: { active: boolean }) {
     <span
       aria-hidden
       className="pointer-events-none absolute inset-x-1.5 top-[-1px] h-px bg-primary"
-      style={{ boxShadow: '0 0 8px 0 rgb(var(--primary) / 0.9)' }}
     />
   )
 }

@@ -34,14 +34,15 @@ export default function LandingPage() {
   return (
     <Container>
       <section className="relative py-16 sm:py-24">
-        {/* A single amber bloom behind the headline. One light source,
-            not a neon sign. */}
+        {/* Reads --glow-alpha, which the original palette sets to 0. The
+            element stays so a future theme can switch the bloom back on
+            from tokens rather than from a hardcoded number in here. */}
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[420px] w-[820px] max-w-[140vw] -translate-x-1/2"
           style={{
             background:
-              'radial-gradient(ellipse at center, rgb(var(--primary) / 0.16), transparent 68%)',
+              'radial-gradient(ellipse at center, rgb(var(--primary) / var(--glow-alpha)), transparent 68%)',
           }}
         />
 

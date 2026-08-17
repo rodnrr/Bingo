@@ -18,11 +18,11 @@ const NAV = [
   { to: '/invites',   label: 'Invites',   icon: Mail },
 ]
 
-/** BEEN in a lit block, -GO! outside it. */
+/** BEEN in a solid block, -GO! outside it. */
 function Wordmark() {
   return (
     <span className="flex items-center font-display text-lg font-bold tracking-tight">
-      <span className="rounded-sm bg-primary px-1.5 py-0.5 text-primary-fg shadow-glow-sm">
+      <span className="rounded-sm bg-primary px-1.5 py-0.5 text-primary-fg">
         BEEN
       </span>
       <span className="pl-1 text-fg">-GO!</span>

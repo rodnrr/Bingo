@@ -12,38 +12,43 @@
    ================================================================ */
 
 @layer base {
-  /* Light — a bright instrument panel, not a document. */
+  /* The original palette: gray-50 page, white cards, orange-600 brand,
+     teal accent. Light is the default again. */
   :root {
-    --base:       248 249 251;
-    --panel:      255 255 255;
-    --panel2:     241 243 247;
+    --base:       249 250 251;   /* gray-50  */
+    --panel:      255 255 255;   /* white    */
+    --panel2:     243 244 246;   /* gray-100 */
     --line:        15  23  42;
-    --fg:          12  16  26;
-    --fg-muted:    88  96 114;
-    --fg-subtle:  128 136 154;
-    --primary:    234  88  12;
+    --fg:          17  24  39;   /* gray-900 */
+    --fg-muted:    75  85  99;   /* gray-600 */
+    --fg-subtle:  107 114 128;   /* gray-500 */
+    --primary:    234  88  12;   /* orange-600 — the brand */
     --primary-fg: 255 255 255;
-    --accent:       8 145 178;
+    --accent:      13 148 136;   /* teal-600 */
 
-    --line-alpha: 0.10;
-    --grid-alpha: 0.045;
+    --line-alpha: 0.11;
+    --grid-alpha: 0;     /* no grid on light — the original was plain */
+    --glow-alpha: 0;     /* no bloom on light either */
   }
 
-  /* Dark — the intended default. */
+  /* Dark stays available from the header toggle. It is the slate
+     counterpart the original's unused dark: classes implied, not the
+     near-black of the amber-terminal pass. */
   .dark {
-    --base:         8   9  13;
-    --panel:       16  18  25;
-    --panel2:      23  26  35;
+    --base:        15  23  42;   /* slate-900 */
+    --panel:       30  41  59;   /* slate-800 */
+    --panel2:      51  65  85;   /* slate-700 */
     --line:       255 255 255;
-    --fg:         232 235 243;
-    --fg-muted:   154 162 181;
-    --fg-subtle:  116 124 143;
-    --primary:    255 138  61;
-    --primary-fg:  22  11   3;
-    --accent:      34 211 238;
+    --fg:         241 245 249;   /* slate-100 */
+    --fg-muted:   203 213 225;   /* slate-300 */
+    --fg-subtle:  148 163 184;   /* slate-400 */
+    --primary:    249 115  22;   /* orange-500 — lifted for dark */
+    --primary-fg: 255 255 255;
+    --accent:      20 184 166;   /* teal-500 */
 
-    --line-alpha: 0.09;
-    --grid-alpha: 0.035;
+    --line-alpha: 0.12;
+    --grid-alpha: 0;
+    --glow-alpha: 0;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -57,13 +62,6 @@
     @apply bg-canvas text-fg font-sans antialiased;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
-    /* The faint engineering grid. Two hairline gradients, fixed, so the
-       page moves over it rather than dragging it along. */
-    background-image:
-      linear-gradient(rgb(var(--line) / var(--grid-alpha)) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(var(--line) / var(--grid-alpha)) 1px, transparent 1px);
-    background-size: 64px 64px, 64px 64px;
-    background-attachment: fixed;
   }
 
   h1, h2, h3, h4 {
@@ -135,10 +133,10 @@
   }
 
   .btn-primary {
-    @apply btn bg-primary px-5 py-2.5 text-primary-fg shadow-glow-sm;
+    @apply btn bg-primary px-5 py-2.5 text-primary-fg;
   }
   .btn-primary:hover:not(:disabled) {
-    @apply shadow-glow brightness-110;
+    @apply brightness-95;
   }
   .btn-primary:active:not(:disabled) { @apply scale-[0.98]; }
 
@@ -237,7 +235,6 @@
     content: '';
     @apply absolute inset-x-2 bottom-0 h-px;
     background: rgb(var(--primary));
-    box-shadow: 0 0 8px 0 rgb(var(--primary) / 0.9);
   }
 }
 

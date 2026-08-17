@@ -1,9 +1,9 @@
 // ================================================================
 // Theme
 //
-// Dark is the default and the design's home. Light exists because
-// phones in sunlight exist, and because not everyone reads white-on-
-// black comfortably for long.
+// Light is the default — it is the original palette and the one the
+// brand was drawn for. Dark is available from the header for anyone who
+// prefers it.
 //
 // The class is applied by an inline script in index.html *before* first
 // paint. This module only keeps the choice in sync afterwards — if it
@@ -28,7 +28,7 @@ export function setTheme(theme: Theme): void {
   // Keeps the phone's status bar from fighting the page.
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', dark ? '#08090d' : '#f8f9fb')
+    ?.setAttribute('content', dark ? '#0f172a' : '#f9fafb')
 
   try {
     localStorage.setItem(KEY, theme)

@@ -108,7 +108,7 @@ export function Spinner({ className }: { className?: string }) {
       aria-label="Loading"
       className={clsx('relative h-px w-28 overflow-hidden bg-panel2', className)}
     >
-      <span className="absolute inset-y-0 left-0 w-1/4 bg-primary animate-sweep shadow-glow-sm" />
+      <span className="absolute inset-y-0 left-0 w-1/4 bg-primary animate-sweep" />
     </div>
   )
 }

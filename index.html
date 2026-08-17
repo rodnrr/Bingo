@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -8,7 +8,7 @@
     <meta name="description" content="Been-go! is an invite-only marketplace. List what you have, sell to people you trust, get paid straight to your bank." />
     <meta name="robots" content="noindex, nofollow" />
 
-    <meta name="theme-color" content="#08090d" />
+    <meta name="theme-color" content="#f9fafb" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Been-go!" />
 
@@ -16,22 +16,22 @@
       Theme before first paint. If this ran in React instead, every load
       would show one frame of the wrong theme before correcting itself,
       which is far more jarring than either theme on its own.
-      Dark is the default; `class="dark"` above covers the case where
-      this script is blocked.
+      Light is the default; a blocked script leaves the page light,
+      which is the same thing.
     -->
     <script>
       (function () {
         try {
           var saved = localStorage.getItem('beengo-theme');
-          var dark = saved ? saved === 'dark' : true;
+          var dark = saved === 'dark';
           document.documentElement.classList.toggle('dark', dark);
           document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-          if (!dark) {
+          if (dark) {
             document.querySelector('meta[name="theme-color"]')
-              .setAttribute('content', '#f8f9fb');
+              .setAttribute('content', '#0f172a');
           }
         } catch (e) {
-          document.documentElement.classList.add('dark');
+          /* Light is the default, and the default is what is already here. */
         }
       })();
     </script>
