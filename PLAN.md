@@ -28,7 +28,7 @@ deliberate: it keeps you out of PCI compliance entirely.
 
 ## Step 1 — Supabase project ✅ DONE
 
-The project is created and all ten migrations are applied and verified.
+The project is created and all eleven migrations are applied and verified.
 
 | | |
 |---|---|
@@ -71,6 +71,9 @@ Get your anon key from **Project Settings → API** and put both values in
    - `008_moderation_and_safety.sql` — reports, suspensions, admin actions
    - `009_fix_trusted_writes.sql` — **required**, not optional: without it
      redeem_invite cannot activate anyone and nobody can join
+   - `010_lock_internal_functions.sql` — stops PostgREST exposing the internal
+     helpers as public RPCs
+   - `011_listing_cover_photo.sql` — lets a seller choose the cover photo
 
    Each should say "Success. No rows returned." If one errors, stop and fix it
    before running the next — they build on each other.
@@ -227,27 +230,48 @@ Stripe → Webhooks → your endpoint for the failed delivery and its error.
 
 ## Step 6 — Put it on the internet (30 min)
 
-1. In Cloudflare (your **PocketRocket** account works fine — the account name
-   has nothing to do with the project name) → **Workers & Pages** →
-   **Create → Pages → Connect to Git** → pick this repo.
+**Target: `https://beengo.pocketrocket.dev`** — Been-go! is the marketplace,
+PocketRocket is the umbrella. You already own the domain, so a subdomain costs
+nothing and needs no purchase.
+
+**Cloudflare Pages, not Workers.** The build is a folder of static files; there
+is no server code to run. All the server work happens in Supabase Edge
+Functions. The `public/_redirects` file in this repo is a Pages feature — on a
+Worker it does nothing and a hard refresh on `/listing/abc` would 404.
+
+1. Cloudflare → **Workers & Pages → Create → Pages → Connect to Git** → this repo.
 2. Build settings:
-   - Root directory: leave blank
+   - Root directory: *leave blank*
    - Build command: `npm run build`
    - Output directory: `dist`
-   - Project name: `beengo` — this becomes `beengo.pages.dev`
-3. Environment variables: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-4. Deploy. You get a `beengo-xyz.pages.dev` URL.
-5. Point the new URL back at the rest of the stack:
+   - Project name: `beengo`
+3. Environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+   Both are browser-safe by design — the anon key ships in the JavaScript
+   either way, which is why every rule that matters lives in Postgres.
+4. Deploy. You get `beengo.pages.dev` — free, HTTPS, and fully working. You
+   could stop here; the custom domain is cosmetic.
+5. **Custom domain:** project → **Custom domains → Set up a domain** →
+   `beengo.pocketrocket.dev`. Cloudflare adds the DNS record itself if
+   `pocketrocket.dev` is on the same account. Certificate takes a few minutes.
+6. Point the rest of the stack at it:
    ```bash
-   supabase secrets set APP_URL=https://your-real-url
+   supabase secrets set APP_URL=https://beengo.pocketrocket.dev
    supabase functions deploy connect-onboarding
    supabase functions deploy create-checkout
    ```
-6. Supabase → **Authentication → URL Configuration**: set Site URL to your real
-   URL and add `https://your-url/auth/callback` to Redirect URLs. Skipping this
-   is the single most common reason signup emails appear broken.
+7. Supabase → **Authentication → URL Configuration**:
+   - Site URL: `https://beengo.pocketrocket.dev`
+   - Redirect URLs: add `https://beengo.pocketrocket.dev/auth/callback`
+
+   Skipping this is the single most common reason signup emails appear broken.
 
 **Check it worked:** Run through Step 5 again on the live URL.
+
+> Changing the domain later costs three values — the `APP_URL` secret, the two
+> Supabase auth URLs, and `VITE_APP_URL`. No rebuild, no migration. But do it
+> **before** invites go out: invite links are built from whatever origin the
+> browser was on when they were copied, so links handed out on an old domain
+> keep pointing there.
 
 ---
 
@@ -378,6 +402,37 @@ Named so you can decide, rather than discovering them later:
 - **Shipping labels.** Sellers ship it themselves and paste a tracking number.
 - **Disputes/escrow.** Stripe handles chargebacks against the seller's account.
   If you want to hold funds before releasing them, that's a separate design.
+
+## On the name, so it does not get relitigated
+
+Been-go! is the marketplace. PocketRocket is the umbrella and the domain.
+
+The rename to PocketRocket was considered properly and declined. The reasoning,
+recorded so it does not have to be rebuilt from scratch later:
+
+- **Been-go! is the better marketplace name.** It tells you what the site does
+  to your stuff — it goes. "PocketRocket" says fast and small; the connection to
+  selling only arrives via a tagline.
+- **PocketRocket is the better company name**, which is exactly what
+  `beengo.pocketrocket.dev` gives you: product and studio, one domain, no
+  rename.
+- **"Pocket rocket" carries slang** — a minibike, pocket aces, and a small
+  vibrator. Survivable, but not free, on a site where people list kids' toys and
+  kitchenware.
+- **It is a common phrase**, so harder to own, search for, or trademark.
+  "Been-go!" is odd enough to be yours.
+
+If it comes back up: the rename itself is cheap — about 102 occurrences across
+43 files, one careful find-and-replace plus the wordmark and two taglines. The
+expensive part is doing it *after* invites go out, because invite links embed
+whatever origin they were copied from and members will know it by the old name.
+
+The best PocketRocket version, if you ever want it: tagline "List it. Pocket
+it.", wordmark `[POCKET]ROCKET` in the same orange block, "Launch" for publish
+and "Pocketed" for sold. Or "Pocketed" on its own, which keeps the past-tense
+joke and dodges the slang.
+
+---
 
 ## The one thing to be careful about
 

@@ -9,6 +9,12 @@ the top.
 Same stack and conventions as [StreetRise](https://github.com/rodnrr/StreetRise),
 different product.
 
+**Brand:** Been-go! is the marketplace. **PocketRocket** is the umbrella it ships
+under, and the domain it lives on — `beengo.pocketrocket.dev`. The two names do
+different jobs: Been-go! says what happens to your stuff, PocketRocket is the
+studio. Renaming the product was considered and declined; see the note at the
+bottom of `PLAN.md` if it comes up again.
+
 **→ Setting it up for the first time? Follow [`PLAN.md`](PLAN.md).** It's the
 step-by-step, account-by-account version of everything below.
 
