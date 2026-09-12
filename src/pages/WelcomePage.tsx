@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { redeemInvite } from '@/lib/api'
 import { refreshProfile } from '@/lib/auth'
-import { useAuthStore, toast } from '@/lib/store'
+import { useAuthStore, isMember, toast } from '@/lib/store'
 import { Button, Card, Container, ErrorNote, LoadingBlock } from '@/components/ui'
 
 /**
@@ -12,6 +12,10 @@ import { Button, Card, Container, ErrorNote, LoadingBlock } from '@/components/u
 export default function WelcomePage() {
   const { userId, profile, isLoading } = useAuthStore()
   const navigate = useNavigate()
+  // Set by /auth/callback when the user was heading somewhere specific
+  // before Google took over the tab.
+  const location = useLocation() as { state?: { from?: string } }
+  const next = location.state?.from ?? '/browse'
 
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +31,7 @@ export default function WelcomePage() {
       sessionStorage.removeItem('beengo_invite_code')
       localStorage.removeItem('beengo_invite_code')
       toast.success('You are in. Welcome to Been-go!')
-      navigate('/browse')
+      navigate(next)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not redeem that code')
     } finally {
@@ -54,7 +58,7 @@ export default function WelcomePage() {
 
   if (isLoading) return <LoadingBlock />
   if (!userId) return <Navigate to="/login" replace />
-  if (profile?.status === 'active') return <Navigate to="/browse" replace />
+  if (isMember(profile)) return <Navigate to={next} replace />
 
   if (profile?.status === 'suspended') {
     return (

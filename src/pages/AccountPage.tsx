@@ -8,7 +8,7 @@ import { useAuthStore, toast } from '@/lib/store'
 import { Button, Card, Container, PageHeading } from '@/components/ui'
 
 export default function AccountPage() {
-  const { userId, email, profile } = useAuthStore()
+  const { userId, email, phone, profile } = useAuthStore()
   const [params, setParams] = useSearchParams()
 
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '')
@@ -48,7 +48,8 @@ export default function AccountPage() {
 
   return (
     <Container className="max-w-2xl">
-      <PageHeading title="Account" subtitle={email ?? undefined} />
+      {/* Phone sign-ins have no email, so show whichever identity exists. */}
+      <PageHeading title="Account" subtitle={email ?? phone ?? undefined} />
 
       {/* ── Payouts ── */}
       <Card className="mb-4">

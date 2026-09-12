@@ -4,9 +4,14 @@ import { supabase } from '@/lib/supabase'
 import { Button, Card, Container, ErrorNote, LoadingBlock } from '@/components/ui'
 
 /**
- * Where Supabase sends people back after an email link. Two jobs:
- * finish a confirmation (session already in the URL, handled by
- * detectSessionInUrl), or take a new password after a reset link.
+ * Where Supabase sends people back after an email link or an OAuth
+ * round trip. Two jobs: finish a sign-in (session already in the URL,
+ * handled by detectSessionInUrl), or take a new password after a reset
+ * link.
+ *
+ * A finished sign-in always lands on /welcome, which is the one screen
+ * that knows what to do next: redeem a stashed invite code, or bounce
+ * an existing member straight on to where they were going.
  */
 export default function AuthCallbackPage() {
   const navigate = useNavigate()
@@ -23,9 +28,16 @@ export default function AuthCallbackPage() {
     // detectSessionInUrl has already consumed the fragment by now; just
     // find out whether it worked and route accordingly.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      navigate(session ? '/welcome' : '/login', { replace: true })
+      if (!session) {
+        navigate('/login', { replace: true })
+        return
+      }
+      // ?next= is set when the user was bounced to /login from a
+      // members-only page before going through Google.
+      const next = params.get('next')
+      navigate('/welcome', { replace: true, state: next ? { from: next } : undefined })
     })
-  }, [isReset, navigate])
+  }, [isReset, navigate, params])
 
   if (!isReset) return <LoadingBlock label="Finishing sign in…" />
 

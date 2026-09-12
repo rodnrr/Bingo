@@ -9,9 +9,17 @@ import type { Profile, ToastMessage } from '@/types'
 interface AuthState {
   userId:    string | null
   email:     string | null
+  // Phone sign-ins have no email at all, so the identity shown in the
+  // header and on /account has to come from whichever one exists.
+  phone:     string | null
   profile:   Profile | null
   isLoading: boolean
-  setSession: (session: { userId: string; email: string | null; profile: Profile | null }) => void
+  setSession: (session: {
+    userId: string
+    email: string | null
+    phone: string | null
+    profile: Profile | null
+  }) => void
   setProfile: (profile: Profile | null) => void
   clear:      () => void
   setLoading: (loading: boolean) => void
@@ -20,17 +28,37 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   userId:    null,
   email:     null,
+  phone:     null,
   profile:   null,
   isLoading: true,
-  setSession: ({ userId, email, profile }) =>
-    set({ userId, email, profile, isLoading: false }),
+  setSession: ({ userId, email, phone, profile }) =>
+    set({ userId, email, phone, profile, isLoading: false }),
   setProfile: (profile) => set({ profile }),
-  clear:      () => set({ userId: null, email: null, profile: null, isLoading: false }),
+  clear:      () =>
+    set({ userId: null, email: null, phone: null, profile: null, isLoading: false }),
   setLoading: (isLoading) => set({ isLoading }),
 }))
 
-/** Signed in AND past the invite gate. */
-export const isMember = (profile: Profile | null): boolean => profile?.status === 'active'
+/**
+ * A super admin is exempt from the invite gate but not from suspension.
+ * Every helper below has to agree with its SQL twin in migration 005 or
+ * the UI offers pages the database then refuses.
+ */
+const superAdminInGoodStanding = (profile: Profile | null): boolean =>
+  profile?.is_super_admin === true && profile.status !== 'suspended'
+
+/** Signed in AND past the invite gate. Mirrors `is_member()` in SQL. */
+export const isMember = (profile: Profile | null): boolean =>
+  profile?.status === 'active' || superAdminInGoodStanding(profile)
+
+/** Can open the admin area. Mirrors `is_admin()` in SQL. */
+export const isAdmin = (profile: Profile | null): boolean =>
+  superAdminInGoodStanding(profile) ||
+  (profile?.is_admin === true && profile.status === 'active')
+
+/** Can make other people admins. Mirrors `is_super_admin()` in SQL. */
+export const isSuperAdmin = (profile: Profile | null): boolean =>
+  superAdminInGoodStanding(profile)
 
 /** Can actually receive money — the gate on listing something for sale. */
 export const canSell = (profile: Profile | null): boolean =>

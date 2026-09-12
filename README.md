@@ -41,14 +41,39 @@ Other commands: `npm run typecheck`, `npm run lint`, `npm run build`,
 
 Anyone can create an account; nobody can *do* anything with one. Signup writes a
 `profiles` row at `status = 'pending_invite'`, and every RLS policy in the
-database checks `is_member()` — which is `status = 'active'`. The only way to
-flip that is `redeem_invite(code)`.
+database checks `is_member()` — which is `status = 'active'`, or a super admin.
+The only way to flip that is `redeem_invite(code)`.
+
+Three ways in, one gate behind all of them: email + password, Google, or a
+6-digit code by SMS. Google and phone accounts land at `pending_invite` like
+everyone else, so a provider is a way to *sign in*, never a way past the gate.
+Both are dashboard settings rather than code — see Step 3b of `PLAN.md`.
 
 That means the gate is not a screen someone can skip. A signed-in non-member who
 bypasses the router still reads zero listings, because the fence is in Postgres.
 
 Members get 3 invites each. Codes are single-use, expire in 30 days, and are
-revocable.
+revocable. A code typed at signup is stashed on the device and redeemed the
+moment a session exists, which is what lets a Google or phone signup — both of
+which leave the page before any session exists — still arrive holding it.
+
+### Who can do what
+
+| Tier | Invite gate | Other members' rows | Admin flags |
+|---|---|---|---|
+| Member | needs a code | no | no |
+| Admin | needs a code | activate, suspend, set invite allowance | no |
+| Super admin | **exempt** | same | grant and revoke |
+
+`/admin` is the screen for the last two: counters, a member directory, and a
+link to every route in the app. The first super admin is made from the SQL
+editor with `bootstrap_super_admin('you@example.com')` — that function is
+revoked from both browser roles and refuses any caller holding a session, so it
+cannot be reached from the app at all.
+
+Everything the screen does goes through an RPC that re-checks `is_admin()`
+server-side, and the admin RLS policies do the same. Hiding the nav link is
+courtesy; the fence is in Postgres.
 
 ### Money
 
@@ -106,6 +131,7 @@ as StreetRise. They are not run by the deploy pipeline.
 | `002_rls_policies.sql` | Every access rule + the column-protection triggers |
 | `003_rpc_functions.sql` | Invites, offers, shipping, search |
 | `004_storage_and_seed.sql` | Photo bucket + 12 categories |
+| `005_admin_and_auth_providers.sql` | Super admin tier, admin RPCs, Google/phone profiles |
 
 ## Status
 
@@ -119,6 +145,15 @@ Working:
 - [x] Orders — purchases, sales, tracking, delivery confirmation
 - [x] Seller payouts — Stripe Connect Express onboarding + dashboard
 - [x] RLS on every table, with money columns server-owned
+- [x] Sign in with Google, or with a code texted to your phone
+- [x] Admin and super admin tiers, with an `/admin` screen for both
+
+Fixed along the way: `redeem_invite()` never actually admitted anyone. The
+column-protection trigger from `002` assumed a `SECURITY DEFINER` routine runs
+with `auth.uid()` NULL — it does not; definer changes the role, never the JWT —
+so the trigger reverted the one UPDATE that redemption exists to perform, and
+did it silently. Migration `005` tests `current_user` instead, which is the
+thing that actually differs between a browser write and a server write.
 
 Not built on purpose (see the end of `PLAN.md` for why): buyer↔seller messaging,
 timed auctions, in-app refunds, ratings, shipping labels, escrow.
@@ -128,8 +163,9 @@ Known gaps:
 - [ ] **The fee percentage lives in two places** — `MARKETPLACE_FEE_BPS` (real)
       and `FEE_BPS` in `src/pages/SellPage.tsx` (the seller's estimate). Change
       both together.
-- [ ] **No admin UI.** Suspending a member or topping up invites is a SQL update;
-      the `is_admin` flag and policies exist, the screens do not.
+- [ ] **The admin screen has no listing or order moderation.** An admin can
+      suspend a *member*, which stops everything they do; taking down one bad
+      listing while leaving the account alone is still a SQL update.
 - [ ] **Offers never expire on their own.** The `expired` status exists but
       nothing sets it — it needs a scheduled job.
 - [ ] **Quantity is decremented by the webhook only.** Two buyers can both reach

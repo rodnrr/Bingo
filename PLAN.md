@@ -39,6 +39,7 @@ deliberate: it keeps you out of PCI compliance entirely.
    - `002_rls_policies.sql` — the security rules
    - `003_rpc_functions.sql` — invites, offers, shipping
    - `004_storage_and_seed.sql` — photo storage + categories
+   - `005_admin_and_auth_providers.sql` — super admin + Google/phone signups
 
    Each should say "Success. No rows returned." If one errors, stop and fix it
    before running the next — they build on each other.
@@ -74,23 +75,79 @@ see your row with `status = pending_invite`.
 
 ---
 
-## Step 3 — Let yourself in (5 min)
+## Step 3 — Make yourself the super admin (5 min)
 
-Nobody has an invite yet, so bootstrap the first member by hand. In the Supabase
-SQL Editor, using the email you just signed up with:
+Nobody has an invite yet, so the first account is promoted by hand. In the
+Supabase SQL Editor, using the email (or phone, in `+15551234567` form) you just
+signed up with:
 
 ```sql
-UPDATE profiles
-   SET status = 'active',
-       is_admin = TRUE,
-       invites_remaining = 50
- WHERE id = (SELECT id FROM auth.users WHERE email = 'you@example.com');
+SELECT * FROM bootstrap_super_admin('you@example.com');
 ```
 
-Refresh the browser. You're in, you're the admin, and you have 50 invites.
+Refresh the browser. You're in, you're the super admin, and you have 25 invites.
 
-**Check it worked:** `/browse` loads instead of bouncing you to `/welcome`, and
-`/invites` lets you create a code.
+This function is deliberately unreachable from the app: it is revoked from the
+`anon` and `authenticated` roles and refuses any caller carrying a session, so
+the SQL Editor is the only place it runs. That is the point — an endpoint that
+grants super admin by email address would be the entire security model handed to
+anyone with `curl`.
+
+### What super admin gets you
+
+- **Every page.** A super admin is inside the invite gate without ever redeeming
+  a code, in the router *and* in RLS. `/admin` lists every route as a link, so
+  the tour does not involve guessing URLs.
+- **Every member.** `/admin` has the member directory: activate, suspend, change
+  someone's invite allowance, and see which provider each person signs in with.
+- **Every admin.** Only a super admin can promote or demote, and the app refuses
+  to let the last super admin demote themselves — that mistake has no in-app way
+  back, only this SQL Editor.
+
+An ordinary **admin** (`is_admin`, granted from `/admin`) gets the first two.
+They cannot touch the admin flags, and they cannot suspend another admin.
+
+**Check it worked:** `/browse` loads instead of bouncing you to `/welcome`,
+`/invites` lets you create a code, and `Admin` appears in the header nav.
+
+---
+
+## Step 3b — Google and phone sign-in (15 min, optional)
+
+Email and password work out of the box. The other two are provider settings in
+the Supabase dashboard — no code change, no redeploy.
+
+Both land new accounts at `status = 'pending_invite'` exactly like an email
+signup, so neither is a way around the invite gate.
+
+### Google
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → **APIs &
+   Services → Credentials → Create credentials → OAuth client ID → Web
+   application**.
+2. **Authorised redirect URI**: the callback Supabase shows you in the next
+   step. It looks like `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
+3. Copy the client ID and client secret.
+4. Supabase → **Authentication → Providers → Google** → enable, paste both,
+   save.
+5. Supabase → **Authentication → URL Configuration** → add your site URL and
+   `http://localhost:5173/auth/callback` to the redirect allow-list (and the
+   production equivalent once you have deployed).
+
+### Phone
+
+1. Sign up with an SMS provider — Twilio, MessageBird, Vonage and Textlocal are
+   the supported ones.
+2. Supabase → **Authentication → Providers → Phone** → enable, paste the
+   provider credentials, save.
+3. Leave **Confirm phone** on. The 6-digit code *is* the sign-in.
+
+SMS costs real money per message and is the usual target for abuse, so keep the
+rate limits under **Authentication → Rate Limits** conservative.
+
+**Check it worked:** `/login` shows a Google button and an Email/Phone tab pair.
+A Google signup lands on `/welcome` asking for an invite code; an existing
+member goes straight to `/browse`.
 
 ---
 

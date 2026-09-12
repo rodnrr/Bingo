@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   Search, PlusCircle, Package, ShoppingBag, UserCircle, Menu, X, Mail, LogOut,
+  ShieldCheck,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useAuthStore, isMember } from '@/lib/store'
+import { useAuthStore, isMember, isAdmin } from '@/lib/store'
 import { signOut } from '@/lib/auth'
 import { Container } from '@/components/ui'
 import ToastContainer from './ToastContainer'
@@ -22,6 +23,9 @@ export default function RootLayout() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const member = isMember(profile)
+  // Admin gets its own entry rather than a NAV row, so the member nav
+  // reads the same for everyone and staff tools stay visibly separate.
+  const nav = isAdmin(profile) ? [...NAV, { to: '/admin', label: 'Admin', icon: ShieldCheck }] : NAV
 
   const handleSignOut = async () => {
     await signOut()
@@ -43,7 +47,7 @@ export default function RootLayout() {
 
           {member && (
             <nav className="hidden items-center gap-1 md:flex">
-              {NAV.map(({ to, label, icon: Icon }) => (
+              {nav.map(({ to, label, icon: Icon }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -100,7 +104,7 @@ export default function RootLayout() {
           <div className="border-t border-gray-200 bg-white md:hidden dark:border-slate-700 dark:bg-slate-900">
             <Container className="flex flex-col py-2">
               {member &&
-                NAV.map(({ to, label, icon: Icon }) => (
+                nav.map(({ to, label, icon: Icon }) => (
                   <NavLink
                     key={to}
                     to={to}
