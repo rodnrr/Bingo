@@ -9,7 +9,8 @@
 
 import { supabase, callFunction, PHOTO_BUCKET } from './supabase'
 import type {
-  Category, Invite, Listing, ListingCondition, Offer, Order, Profile,
+  AdminMember, AdminStats, Category, Invite, Listing, ListingCondition,
+  MemberStatus, Offer, Order, Profile,
 } from '@/types'
 
 const LISTING_SELECT = `
@@ -384,4 +385,58 @@ export async function startCheckout(args: {
 export async function payoutLink(action: 'onboard' | 'dashboard'): Promise<string> {
   const { url } = await callFunction<{ url: string }>('connect-onboarding', { action })
   return url
+}
+
+// ── Admin ────────────────────────────────────────────────────────
+// Every one of these is an RPC that checks is_admin() server-side.
+// Hiding the /admin link from a non-admin is courtesy; these calls
+// raise 'Admins only' for anyone who finds the URL anyway.
+
+export async function adminStats(): Promise<AdminStats> {
+  return unwrap(await supabase.rpc('admin_stats')) as AdminStats
+}
+
+export async function adminListMembers(args: {
+  search?: string
+  status?: MemberStatus | null
+  limit?: number
+  offset?: number
+} = {}): Promise<AdminMember[]> {
+  return unwrap(
+    await supabase.rpc('admin_list_members', {
+      p_search: args.search?.trim() || null,
+      p_status: args.status ?? null,
+      p_limit:  args.limit ?? 100,
+      p_offset: args.offset ?? 0,
+    }),
+  ) as AdminMember[]
+}
+
+export async function adminSetMemberStatus(
+  userId: string,
+  status: MemberStatus,
+): Promise<Profile> {
+  return unwrap(
+    await supabase.rpc('admin_set_member_status', { p_user_id: userId, p_status: status }),
+  ) as Profile
+}
+
+export async function adminSetInvites(userId: string, invites: number): Promise<Profile> {
+  return unwrap(
+    await supabase.rpc('admin_set_invites', { p_user_id: userId, p_invites: invites }),
+  ) as Profile
+}
+
+/** Super admins only — the RPC refuses everyone else. */
+export async function adminSetRole(
+  userId: string,
+  role: 'member' | 'admin' | 'super_admin',
+): Promise<Profile> {
+  return unwrap(
+    await supabase.rpc('admin_set_role', {
+      p_user_id:        userId,
+      p_is_admin:       role !== 'member',
+      p_is_super_admin: role === 'super_admin',
+    }),
+  ) as Profile
 }

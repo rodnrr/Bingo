@@ -31,6 +31,7 @@ export interface Profile {
   bio: string | null
   status: MemberStatus
   is_admin: boolean
+  is_super_admin: boolean
   invited_by: string | null
   invites_remaining: number
   stripe_account_id: string | null
@@ -149,6 +150,47 @@ export interface Invite {
   created_at: string
 }
 
+/**
+ * A row of the admin member directory. Wider than `Profile` because it
+ * joins auth.users — email, phone and sign-in providers live there, and
+ * no client role may read that schema directly. Comes from the
+ * `admin_list_members` RPC and nowhere else.
+ */
+export interface AdminMember {
+  id: string
+  display_name: string | null
+  handle: string | null
+  email: string | null
+  phone: string | null
+  avatar_url: string | null
+  status: MemberStatus
+  is_admin: boolean
+  is_super_admin: boolean
+  invites_remaining: number
+  providers: string[]
+  listing_count: number
+  order_count: number
+  created_at: string
+  last_sign_in_at: string | null
+}
+
+export interface AdminStats {
+  members_total: number
+  members_active: number
+  members_pending: number
+  members_suspended: number
+  admins: number
+  listings_total: number
+  listings_active: number
+  listings_sold: number
+  offers_pending: number
+  orders_total: number
+  orders_paid: number
+  gmv_cents: number
+  fees_cents: number
+  invites_open: number
+}
+
 export interface ToastMessage {
   id: string
   message: string
@@ -168,6 +210,12 @@ export const CONDITION_LABELS: Record<ListingCondition, string> = {
   good:      'Good',
   fair:      'Fair',
   for_parts: 'For parts',
+}
+
+export const MEMBER_STATUS_LABELS: Record<MemberStatus, string> = {
+  pending_invite: 'Awaiting invite',
+  active:         'Active',
+  suspended:      'Suspended',
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {

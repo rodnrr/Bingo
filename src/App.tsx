@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import RootLayout from '@/components/shared/RootLayout'
 import RequireMember from '@/components/shared/RequireMember'
+import RequireAdmin from '@/components/shared/RequireAdmin'
 import { LoadingBlock } from '@/components/ui'
 import { initAuth } from '@/lib/auth'
 
@@ -24,9 +25,11 @@ const InvitesPage       = lazy(() => import('@/pages/InvitesPage'))
 const AccountPage       = lazy(() => import('@/pages/AccountPage'))
 const CheckoutReturnPage = lazy(() => import('@/pages/CheckoutReturnPage'))
 const AuthCallbackPage  = lazy(() => import('@/pages/AuthCallbackPage'))
+const AdminPage         = lazy(() => import('@/pages/AdminPage'))
 const NotFoundPage      = lazy(() => import('@/pages/NotFoundPage'))
 
 const gated = (element: React.ReactNode) => <RequireMember>{element}</RequireMember>
+const admin = (element: React.ReactNode) => <RequireAdmin>{element}</RequireAdmin>
 
 export default function App() {
   useEffect(() => initAuth(), [])
@@ -54,6 +57,9 @@ export default function App() {
           <Route path="/invites"         element={gated(<InvitesPage />)} />
           <Route path="/account"         element={gated(<AccountPage />)} />
           <Route path="/orders/return"   element={gated(<CheckoutReturnPage />)} />
+
+          {/* Staff */}
+          <Route path="/admin" element={admin(<AdminPage />)} />
 
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*"    element={<Navigate to="/404" replace />} />
