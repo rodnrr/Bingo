@@ -39,14 +39,23 @@ CREATE INDEX IF NOT EXISTS profiles_admin_idx
 -- they call the function by name, so the new bodies take effect
 -- everywhere at once and no policy has to be rewritten.
 
--- Deliberately does NOT check status. A super admin who has never
--- redeemed an invite is still a super admin — that is the whole point
--- of the tier, and it is what lets the first account in.
+-- Exempt from the invite gate, NOT from suspension. Those are two
+-- different things and collapsing them is how "suspended" stops
+-- meaning anything: a status-blind check here would leave a suspended
+-- super admin holding every RPC and every admin policy — including the
+-- one that lets them set their own status back to 'active'. Suspension
+-- has to be able to contain this account, so it is the one status that
+-- closes the exemption.
+--
+-- 'pending_invite' is the exemption that matters, and it is what lets
+-- the first account in before any invite exists to redeem.
 CREATE OR REPLACE FUNCTION is_super_admin()
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles p
-    WHERE p.id = auth.uid() AND p.is_super_admin = TRUE
+    WHERE p.id = auth.uid()
+      AND p.is_super_admin = TRUE
+      AND p.status <> 'suspended'
   );
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
@@ -57,17 +66,24 @@ RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles p
     WHERE p.id = auth.uid()
-      AND (p.is_super_admin = TRUE OR (p.is_admin = TRUE AND p.status = 'active'))
+      AND (
+        (p.is_super_admin = TRUE AND p.status <> 'suspended')
+        OR (p.is_admin = TRUE AND p.status = 'active')
+      )
   );
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
--- The invite gate, with the one documented hole in it.
+-- The invite gate, with the one documented hole in it — and the same
+-- limit on that hole.
 CREATE OR REPLACE FUNCTION is_member()
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles p
     WHERE p.id = auth.uid()
-      AND (p.status = 'active' OR p.is_super_admin = TRUE)
+      AND (
+        p.status = 'active'
+        OR (p.is_super_admin = TRUE AND p.status <> 'suspended')
+      )
   );
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
@@ -335,7 +351,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE OR REPLACE FUNCTION admin_set_invites(p_user_id UUID, p_invites INT)
 RETURNS profiles AS $$
-DECLARE v_profile profiles;
+DECLARE
+  v_target  profiles;
+  v_profile profiles;
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Admins only';
@@ -343,6 +361,20 @@ BEGIN
 
   IF p_invites < 0 OR p_invites > 100 THEN
     RAISE EXCEPTION 'Invite allowance must be between 0 and 100';
+  END IF;
+
+  SELECT * INTO v_target FROM profiles WHERE id = p_user_id;
+  IF v_target.id IS NULL THEN
+    RAISE EXCEPTION 'No such member';
+  END IF;
+
+  -- Same boundary as admin_set_member_status, for the same reason: an
+  -- admin outranks members, not peers. Without this an ordinary admin
+  -- could zero out another admin's allowance from the member table.
+  IF (v_target.is_admin OR v_target.is_super_admin)
+     AND p_user_id <> auth.uid()
+     AND NOT is_super_admin() THEN
+    RAISE EXCEPTION 'Only a super admin can change another admin';
   END IF;
 
   UPDATE profiles SET invites_remaining = p_invites WHERE id = p_user_id
@@ -375,6 +407,18 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = p_user_id) THEN
     RAISE EXCEPTION 'No such member';
   END IF;
+
+  -- Take the row locks before counting anything. Two super admins
+  -- demoting themselves at the same moment would otherwise each count
+  -- the other as the one still standing, both checks would pass, and
+  -- the pair of updates would land zero super admins — the exact
+  -- lockout the check below exists to prevent. ORDER BY gives every
+  -- caller the same lock order, so they queue instead of deadlocking,
+  -- and the count after the wait sees the other transaction's commit.
+  PERFORM 1 FROM profiles
+   WHERE is_super_admin OR id = p_user_id
+   ORDER BY id
+   FOR UPDATE;
 
   -- Locking yourself out is the one mistake with no in-app recovery:
   -- the way back is the SQL editor. Refuse it.

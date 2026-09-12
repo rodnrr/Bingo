@@ -40,22 +40,25 @@ export const useAuthStore = create<AuthState>((set) => ({
 }))
 
 /**
- * Signed in AND past the invite gate.
- *
- * A super admin is a member without ever redeeming a code — the same
- * hole is punched in `is_member()` in migration 005, and these two have
- * to agree or the UI offers pages the database then refuses.
+ * A super admin is exempt from the invite gate but not from suspension.
+ * Every helper below has to agree with its SQL twin in migration 005 or
+ * the UI offers pages the database then refuses.
  */
+const superAdminInGoodStanding = (profile: Profile | null): boolean =>
+  profile?.is_super_admin === true && profile.status !== 'suspended'
+
+/** Signed in AND past the invite gate. Mirrors `is_member()` in SQL. */
 export const isMember = (profile: Profile | null): boolean =>
-  profile?.status === 'active' || profile?.is_super_admin === true
+  profile?.status === 'active' || superAdminInGoodStanding(profile)
 
 /** Can open the admin area. Mirrors `is_admin()` in SQL. */
 export const isAdmin = (profile: Profile | null): boolean =>
-  profile?.is_super_admin === true || (profile?.is_admin === true && profile.status === 'active')
+  superAdminInGoodStanding(profile) ||
+  (profile?.is_admin === true && profile.status === 'active')
 
 /** Can make other people admins. Mirrors `is_super_admin()` in SQL. */
 export const isSuperAdmin = (profile: Profile | null): boolean =>
-  profile?.is_super_admin === true
+  superAdminInGoodStanding(profile)
 
 /** Can actually receive money — the gate on listing something for sale. */
 export const canSell = (profile: Profile | null): boolean =>

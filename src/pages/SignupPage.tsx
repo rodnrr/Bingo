@@ -35,12 +35,21 @@ export default function SignupPage() {
 
   // Stash as they type, not on submit: a Google or phone signup hands
   // the browser away before any submit happens, and the code has to
-  // already be on the device when /welcome looks for it. Short entries
-  // are ignored so a half-typed code does not trigger a failed
-  // auto-redeem on the other side.
+  // already be on the device when /welcome looks for it.
+  //
+  // Clearing matters as much as writing. A code too short to be real is
+  // not "leave the old one alone" — if someone corrects a mistyped code
+  // by emptying the field and then signs up with Google, the stale
+  // value would follow them to /welcome and be auto-redeemed, spending
+  // a single-use invite on an account it was never meant for. What is
+  // on screen is what is stored.
   useEffect(() => {
     const value = code.trim().toUpperCase()
-    if (value.length < 6) return
+    if (value.length < 6) {
+      sessionStorage.removeItem('beengo_invite_code')
+      localStorage.removeItem('beengo_invite_code')
+      return
+    }
     sessionStorage.setItem('beengo_invite_code', value)
     localStorage.setItem('beengo_invite_code', value)
   }, [code])
